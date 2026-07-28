@@ -734,7 +734,7 @@ function bootTerminal() {
     stage = 'monitoring';
     startButton.disabled = true;
     startButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Trace active';
-    command('start live monitoring');
+    command('edgectl monitor --live --routes /products,/cart,/checkout');
     line('Live monitor attached to storefront, cart, and checkout', 'ok');
     line('Traffic baseline recorded: 2,340 requests/min', 'info');
     setIncidentVisual('warning', 'Watching live traffic', 'Monitoring', 'Traffic will be compared with the normal sale-event level.');
@@ -810,7 +810,7 @@ function bootTerminal() {
     setStepState(name, 'running');
 
     if (name === 'inspect') {
-      command('show repeated requests');
+      command('edgectl inspect --repeats --top 4');
       await new Promise((resolve) => setTimeout(resolve, 850));
       sourceRows.forEach((row) => row.classList.remove('opacity-45'));
       sourceVerdicts.forEach((node) => {
@@ -827,7 +827,7 @@ function bootTerminal() {
     }
 
     if (name === 'classify') {
-      command('check customer accounts and orders');
+      command('auditctl verify --scope accounts,orders');
       await new Promise((resolve) => setTimeout(resolve, 900));
       breachStatus.textContent = 'No account breach detected';
       breachStatus.className = 'text-[10px] font-bold text-emerald-400';
@@ -842,7 +842,7 @@ function bootTerminal() {
     }
 
     if (name === 'limit') {
-      command('slow repeated traffic');
+      command('ratectl limit --sources repeated --rate 40/10s');
       await new Promise((resolve) => setTimeout(resolve, 1000));
       stage = 'limited';
       setSystemState('filtering');
@@ -870,7 +870,7 @@ function bootTerminal() {
     }
 
     if (name === 'scrub') {
-      command('start traffic filtering');
+      command('wafctl deploy --filter ddos --mode block');
       await new Promise((resolve) => setTimeout(resolve, 1100));
       stage = 'scrubbed';
       sourceVerdicts.forEach((node, index) => {
@@ -917,7 +917,7 @@ function bootTerminal() {
     }
 
     if (name === 'verify') {
-      command('test website cart and checkout');
+      command('healthctl probe --routes storefront,cart,checkout');
       await new Promise((resolve) => setTimeout(resolve, 1200));
       clearInterval(telemetryTimer);
       stage = 'recovered';
@@ -971,7 +971,7 @@ function bootTerminal() {
     completedSteps = 0;
     setSystemState('healthy');
     terminal.innerHTML = '';
-    command('check system status');
+    command('systemctl status ecocart.target');
     line('Website: ready', 'ok');
     line('Cart: ready', 'ok');
     line('Checkout: ready', 'ok');
@@ -1022,27 +1022,27 @@ function bootTerminal() {
   function cinematicCommandForStage() {
     const commands = {
       idle: {
-        text: 'start live monitoring',
+        text: 'edgectl monitor --live --routes /products,/cart,/checkout',
         action: () => startTrace(),
       },
       detected: {
-        text: 'show repeated requests',
+        text: 'edgectl inspect --repeats --top 4',
         action: () => runAction('inspect'),
       },
       inspected: {
-        text: 'check customer accounts and orders',
+        text: 'auditctl verify --scope accounts,orders',
         action: () => runAction('classify'),
       },
       classified: {
-        text: 'slow repeated traffic',
+        text: 'ratectl limit --sources repeated --rate 40/10s',
         action: () => runAction('limit'),
       },
       limited: {
-        text: 'start traffic filtering',
+        text: 'wafctl deploy --filter ddos --mode block',
         action: () => runAction('scrub'),
       },
       scrubbed: {
-        text: 'test website cart and checkout',
+        text: 'healthctl probe --routes storefront,cart,checkout',
         action: () => runAction('verify'),
       },
     };

@@ -2,16 +2,43 @@
   "name": "ecommerce",
   "version": "1.0.0",
   "description": "EcoCart is a PHP, MySQL, XAMPP, HTML, JavaScript, and DaisyUI demo system for the DDoS awareness screenplay.",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "build:css": "npx @tailwindcss/cli -i assets/app.css -o public/output.css"
+    "build:css": "npx @tailwindcss/cli -i assets/app.css -o public/output.css",
+    "start": "electron .",
+    "dist": "electron-builder --win nsis"
   },
   "keywords": [],
-  "author": "",
+  "author": "EcoCart",
   "license": "ISC",
-  "dependencies": {
+  "build": {
+    "appId": "com.ecocart.trafficcontrol",
+    "productName": "EcoCart Traffic Control",
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "assets/**/*",
+      "public/**/*"
+    ],
+    "directories": {
+      "output": "installer"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "EcoCart Traffic Control"
+    }
+  },
+  "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
     "daisyui": "^5.7.4",
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3",
     "tailwindcss": "^4.3.3"
   }
 }

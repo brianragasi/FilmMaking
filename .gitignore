@@ -3,6 +3,11 @@ node_modules/
 tmp/
 *.log
 
+# Electron build output
+dist/
+release/
+installer/
+
 # Local database credentials must never be committed
 includes/config.local.php
 

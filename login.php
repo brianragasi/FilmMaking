@@ -121,8 +121,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <label class="block">
                                 <span class="mb-1 block text-xs font-black">Full name</span>
                                 <div class="relative">
-                                    <i data-lucide="user-round" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
-                                    <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" name="name" autocomplete="name" maxlength="120" value="<?= htmlspecialchars((string) ($_POST['name'] ?? '')) ?>" required>
+                                    <input class="peer h-11 min-h-11 w-full rounded-lg border border-slate-300 bg-white pl-12 text-sm text-slate-900 transition focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5 focus:outline-none" name="name" autocomplete="name" maxlength="120" value="<?= htmlspecialchars((string) ($_POST['name'] ?? '')) ?>" required>
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 grid w-11 place-items-center text-slate-400 transition-colors peer-focus:text-rose-600"><i data-lucide="user-round" class="h-[18px] w-[18px]"></i></span>
+                                    <span class="pointer-events-none absolute left-11 top-1/2 h-5 w-px -translate-y-1/2 bg-slate-200 transition-colors peer-focus:bg-rose-200"></span>
                                 </div>
                             </label>
                         <?php endif; ?>
@@ -130,25 +131,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <label class="block">
                             <span class="mb-1 block text-xs font-black">Email address</span>
                             <div class="relative">
-                                <i data-lucide="mail" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
-                                <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" type="email" name="email" autocomplete="email" maxlength="160" value="<?= htmlspecialchars((string) ($_POST['email'] ?? '')) ?>" required>
-                            </div>
+                                    <input class="peer h-11 min-h-11 w-full rounded-lg border border-slate-300 bg-white pl-12 text-sm text-slate-900 transition focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5 focus:outline-none" type="email" name="email" autocomplete="email" maxlength="160" value="<?= htmlspecialchars((string) ($_POST['email'] ?? '')) ?>" required>
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 grid w-11 place-items-center text-slate-400 transition-colors peer-focus:text-rose-600"><i data-lucide="mail" class="h-[18px] w-[18px]"></i></span>
+                                    <span class="pointer-events-none absolute left-11 top-1/2 h-5 w-px -translate-y-1/2 bg-slate-200 transition-colors peer-focus:bg-rose-200"></span>
+                                </div>
                         </label>
 
                         <label class="block">
                             <span class="mb-1 block text-xs font-black">Password</span>
                             <div class="relative">
-                                <i data-lucide="lock-keyhole" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
-                                <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" type="password" name="password" autocomplete="<?= $mode === 'register' ? 'new-password' : 'current-password' ?>" minlength="10" maxlength="72" required>
-                            </div>
+                                    <input class="peer h-11 min-h-11 w-full rounded-lg border border-slate-300 bg-white pl-12 text-sm text-slate-900 transition focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5 focus:outline-none" type="password" name="password" autocomplete="<?= $mode === 'register' ? 'new-password' : 'current-password' ?>" minlength="10" maxlength="72" required>
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 grid w-11 place-items-center text-slate-400 transition-colors peer-focus:text-rose-600"><i data-lucide="lock" class="h-[18px] w-[18px]"></i></span>
+                                    <span class="pointer-events-none absolute left-11 top-1/2 h-5 w-px -translate-y-1/2 bg-slate-200 transition-colors peer-focus:bg-rose-200"></span>
+                                </div>
                         </label>
 
                         <?php if ($mode === 'register'): ?>
                             <label class="block">
                                 <span class="mb-1 block text-xs font-black">Confirm password</span>
                                 <div class="relative">
-                                    <i data-lucide="check" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
-                                    <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" type="password" name="password_confirmation" autocomplete="new-password" minlength="10" maxlength="72" required>
+                                    <input class="peer h-11 min-h-11 w-full rounded-lg border border-slate-300 bg-white pl-12 text-sm text-slate-900 transition focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5 focus:outline-none" type="password" name="password_confirmation" autocomplete="new-password" minlength="10" maxlength="72" required>
+                                    <span class="pointer-events-none absolute inset-y-0 left-0 grid w-11 place-items-center text-slate-400 transition-colors peer-focus:text-rose-600"><i data-lucide="shield-check" class="h-[18px] w-[18px]"></i></span>
+                                    <span class="pointer-events-none absolute left-11 top-1/2 h-5 w-px -translate-y-1/2 bg-slate-200 transition-colors peer-focus:bg-rose-200"></span>
                                 </div>
                             </label>
                         <?php endif; ?>
