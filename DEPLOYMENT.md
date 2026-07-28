@@ -1,59 +1,64 @@
 # EcoCart Deployment
 
-## Production address
+## Production Address
 
-EcoCart is deployed to:
+EcoCart is moving to:
 
 ```text
-https://ecocart-mnl.site.je
+https://ecocart.whf.bz
 ```
 
-The InfinityFree document root is `/ecocart-mnl.site.je/htdocs/`. If the domain
-health check says the directory is missing, use **Recreate Directory** before
-running the deployment workflow.
+If SSL is not ready yet, use:
 
-## 2. Add GitHub deployment secrets
+```text
+http://ecocart.whf.bz
+```
 
-Open the `brianragasi/FilmMaking` repository and go to:
+The GoogieHost FTP account in the control panel should point to the domain root, with the public website files inside `/public_html/`.
+
+## GitHub Secrets
+
+Open the `brianragasi/FilmMaking` repository:
 
 **Settings > Secrets and variables > Actions > New repository secret**
 
-Create both secrets:
+Create these secrets:
 
 | Secret | Value |
 | --- | --- |
-| `INFINITYFREE_FTP_USERNAME` | Username shown under InfinityFree **FTP Details** |
-| `INFINITYFREE_FTP_PASSWORD` | Password shown under InfinityFree **FTP Details** |
+| `GOOGIEHOST_FTP_SERVER` | GoogieHost FTP server, usually the server host shown in the panel such as `cloud3.googiehost.com` |
+| `GOOGIEHOST_FTP_USERNAME` | FTP username shown in GoogieHost, for example `admin@ecocart.whf.bz` |
+| `GOOGIEHOST_FTP_PASSWORD` | The FTP password after you rotate it |
 
-Never put the FTP password directly in the workflow or any PHP file committed
-to GitHub.
+Never commit the FTP password to GitHub or paste it into a PHP file.
 
-## 3. First deployment
+## First Deployment
 
-The workflow at `.github/workflows/deploy-infinityfree.yml` runs after every
-push to `main`. It can also be started from the repository's **Actions** tab
-using **Run workflow**.
+The workflow at `.github/workflows/deploy-googiehost.yml` runs after every push to `main`. It builds `public/output.css`, validates the JavaScript, and synchronizes the public runtime files to `/public_html/` over FTPS.
 
-It builds `public/output.css`, validates `assets/app.js`, and synchronizes the
-runtime files to `/ecocart-mnl.site.je/htdocs/` over FTPS.
+The deployment intentionally excludes local filming and development files:
 
-## 4. Configure the InfinityFree database
+- `attacker-terminal.php`
+- `index.html`
+- `main.js`
+- `preload.js`
+- Electron build folders
+- docs, story files, database scripts, logs, and local config
+
+Use the attacker/traffic-control prop locally in XAMPP for filming. Do not upload it to free public hosting.
+
+## Database Setup
 
 The database is not created by FTP deployment:
 
-1. Create a MySQL database in InfinityFree.
-2. Open its phpMyAdmin, select the new database, and import
-   `database/schema.sql`. The script creates only the EcoCart tables and seed
-   products inside the selected database.
-3. In InfinityFree File Manager, copy `includes/config.local.example.php` to
-   `includes/config.local.php`.
-4. Replace the example values with the exact MySQL hostname, database name,
-   username, and password from the InfinityFree panel.
+1. Create a MySQL database in GoogieHost.
+2. Open phpMyAdmin, select the new database, and import `database/schema.sql`.
+3. In GoogieHost File Manager, create `includes/config.local.php`.
+4. Use `includes/config.local.example.php` as the shape of the file and fill in the exact MySQL hostname, database name, username, and password from GoogieHost.
 
-`includes/config.local.php` is excluded from Git and automatic deployment, so
-future pushes will not expose or overwrite the production password.
+`includes/config.local.php` is excluded from Git and automatic deployment, so future pushes will not expose or overwrite the production password.
 
-## 5. Normal update flow
+## Normal Update Flow
 
 ```bash
 git add .
@@ -61,4 +66,4 @@ git commit -m "Describe the change"
 git push
 ```
 
-The GitHub **Actions** tab shows whether the InfinityFree deployment succeeded.
+The GitHub **Actions** tab shows whether the GoogieHost deployment succeeded.

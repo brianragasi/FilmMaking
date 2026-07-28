@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Complete your EcoCart Big Blowout Sale order.">
     <title>Secure Checkout | EcoCart</title>
-    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
+    <link href="public/output-public.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output-public.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
@@ -383,6 +383,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </footer>
 
-    <script src="assets/app.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app.js')) ?>"></script>
+    <script src="assets/app-public.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app-public.js')) ?>"></script>
 </body>
 </html>

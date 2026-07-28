@@ -1,14 +1,5 @@
 RewriteEngine On
 Options -Indexes
 
-# InfinityFree free subdomains include SSL, so keep every public route on HTTPS.
-RewriteCond %{HTTP:X-Forwarded-Proto} !https
-RewriteCond %{HTTPS} off
-RewriteCond %{HTTP:CF-Visitor} !{"scheme":"https"}
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-
 # Never expose server configuration or database files as public routes.
 RewriteRule ^(?:includes|database)/ - [F,L,NC]
-
-# Clean entry point for the full-screen Traffic Control scene.
-RewriteRule ^traffic-control/?$ attacker-terminal.php [L,QSA]

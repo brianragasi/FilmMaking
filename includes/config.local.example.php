@@ -2,9 +2,8 @@
 declare(strict_types=1);
 
 return [
-    'host' => 'sqlXXX.infinityfree.com',
-    'name' => 'if0_XXXXXXXX_ecocart',
-    'user' => 'if0_XXXXXXXX',
+    'host' => 'localhost',
+    'name' => 'your_database_name',
+    'user' => 'your_database_user',
     'pass' => 'replace-with-your-database-password',
 ];
-

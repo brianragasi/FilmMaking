@@ -4,7 +4,7 @@
   "description": "EcoCart is a PHP, MySQL, XAMPP, HTML, JavaScript, and DaisyUI demo system for the DDoS awareness screenplay.",
   "main": "main.js",
   "scripts": {
-    "build:css": "npx @tailwindcss/cli -i assets/app.css -o public/output.css",
+    "build:css": "npx @tailwindcss/cli -i assets/app.css -o public/output.css && npx @tailwindcss/cli -i assets/app-public.css -o public/output-public.css",
     "start": "electron .",
     "dist": "electron-builder --win nsis"
   },

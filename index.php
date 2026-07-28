@@ -25,26 +25,26 @@ $storyPicks = array_slice($products, 0, 6);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="EcoCart Big Blowout Sale - everyday essentials for students, workers, riders, and families.">
-    <link rel="canonical" href="https://ecocart-mnl.site.je/">
+    <link rel="canonical" href="https://ecocart.whf.bz/">
     <meta property="og:title" content="EcoCart | Big Blowout Sale">
     <meta property="og:description" content="Shop school, worksite, rider, home, and family essentials at unusually good prices.">
-    <meta property="og:image" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
-    <meta property="og:image:secure_url" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
+    <meta property="og:image" content="https://ecocart.whf.bz/assets/images/ecocart-share.png">
+    <meta property="og:image:secure_url" content="https://ecocart.whf.bz/assets/images/ecocart-share.png">
     <meta property="og:image:type" content="image/png">
     <meta property="og:image:width" content="1730">
     <meta property="og:image:height" content="909">
     <meta property="og:image:alt" content="EcoCart sale collection with school, worksite, rider, home, and family essentials">
-    <meta property="og:url" content="https://ecocart-mnl.site.je/">
+    <meta property="og:url" content="https://ecocart.whf.bz/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="EcoCart">
     <meta property="og:locale" content="en_PH">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="EcoCart | Big Blowout Sale">
     <meta name="twitter:description" content="Shop school, worksite, rider, home, and family essentials at unusually good prices.">
-    <meta name="twitter:image" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
+    <meta name="twitter:image" content="https://ecocart.whf.bz/assets/images/ecocart-share.png">
     <meta name="twitter:image:alt" content="EcoCart sale collection with school, worksite, rider, home, and family essentials">
     <title>EcoCart | Big Blowout Sale</title>
-    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
+    <link href="public/output-public.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output-public.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
@@ -450,6 +450,6 @@ $storyPicks = array_slice($products, 0, 6);
         </div>
     </div>
 
-    <script src="assets/app.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app.js')) ?>"></script>
+    <script src="assets/app-public.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app-public.js')) ?>"></script>
 </body>
 </html>

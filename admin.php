@@ -24,7 +24,7 @@ $sourceRows = [
     ['ip' => '203.0.113.42', 'region' => 'SG edge', 'signature' => 'GET /checkout repeat', 'rate' => '4,280/s'],
     ['ip' => '198.51.100.17', 'region' => 'JP edge', 'signature' => 'POST /cart burst', 'rate' => '3,940/s'],
     ['ip' => '192.0.2.88', 'region' => 'US edge', 'signature' => 'GET /products loop', 'rate' => '3,610/s'],
-    ['ip' => '203.0.113.106', 'region' => 'DE edge', 'signature' => 'TLS reconnect flood', 'rate' => '2,890/s'],
+    ['ip' => '203.0.113.106', 'region' => 'DE edge', 'signature' => 'TLS reconnect burst', 'rate' => '2,890/s'],
 ];
 
 $customerImpact = [
@@ -42,7 +42,7 @@ $customerImpact = [
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="EcoCart production operations center.">
     <title>EcoCart Operations | Production</title>
-    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
+    <link href="public/output-public.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output-public.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
@@ -347,6 +347,6 @@ $customerImpact = [
         </section>
     </main>
 
-    <script src="assets/app.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app.js')) ?>"></script>
+    <script src="assets/app-public.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app-public.js')) ?>"></script>
 </body>
 </html>

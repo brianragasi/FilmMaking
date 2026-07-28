@@ -234,7 +234,7 @@ function sign_out_user(): void
 
 function safe_next_path(?string $next): string
 {
-    $allowed = ['index.php', 'account.php', 'checkout.php', 'admin.php', 'attacker-terminal.php'];
+    $allowed = ['index.php', 'account.php', 'checkout.php', 'admin.php'];
     $candidate = basename((string) $next);
 
     return in_array($candidate, $allowed, true) ? $candidate : 'account.php';

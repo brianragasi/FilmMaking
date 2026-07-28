@@ -1,4 +1,4 @@
-name: Deploy EcoCart to InfinityFree
+name: Deploy EcoCart to GoogieHost
 
 on:
   push:
@@ -35,18 +35,20 @@ jobs:
           npm run build:css
 
       - name: Validate JavaScript
-        run: node --check assets/app.js
+        run: |
+          node --check assets/app-public.js
+          node --check assets/app.js
 
       - name: Deploy runtime files over FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
-          server: ftpupload.net
-          username: ${{ secrets.INFINITYFREE_FTP_USERNAME }}
-          password: ${{ secrets.INFINITYFREE_FTP_PASSWORD }}
+          server: ${{ secrets.GOOGIEHOST_FTP_SERVER }}
+          username: ${{ secrets.GOOGIEHOST_FTP_USERNAME }}
+          password: ${{ secrets.GOOGIEHOST_FTP_PASSWORD }}
           protocol: ftps
           port: 21
           local-dir: ./
-          server-dir: /ecocart-mnl.site.je/htdocs/
+          server-dir: /public_html/
           timeout: 120000
           log-level: standard
           exclude: |
@@ -55,12 +57,23 @@ jobs:
             **/.github/**
             **/node_modules/**
             **/tmp/**
+            **/dist/**
+            **/release/**
+            **/installer/**
             **/*.log
             **/*.md
             **/*.pdf
             **/package.json
             **/package-lock.json
             **/assets/app.css
+            **/assets/app-public.css
+            **/assets/app.js
+            **/assets/images/swarmgrid-c2-icon.png
+            **/public/output.css
             **/database/**
             **/story.txt
+            **/attacker-terminal.php
+            **/index.html
+            **/main.js
+            **/preload.js
             **/includes/config.local.php
