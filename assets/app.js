@@ -1351,9 +1351,9 @@ function bootAttackerConsole() {
     targetDot.className = 'h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]';
     targetState.textContent = 'Target selected';
     targetState.className = 'font-mono text-[9px] font-black uppercase text-rose-400';
-    line('Target selected: EcoCart ecommerce', 'warn');
-    line(`Website: ${targetHost}`, 'info');
-    line('Selected pages: Products, Cart, and Checkout', 'info');
+    line(`Target locked: ecocart.ecommerce @ ${targetHost}`, 'warn');
+    line('Recon: 3 routes mapped | /products /cart /checkout', 'info');
+    line('Session ID: TC-48 | handshake OK', 'info');
     primeInput();
   }
 
@@ -1365,12 +1365,10 @@ function bootAttackerConsole() {
     deviceNode.textContent = '48';
     liveDot.className = 'h-2.5 w-2.5 rounded-full bg-cyan-400';
     setNodes('ready');
-    line('48 devices connected to the EcoCart target', 'ok');
-    line('REQUEST devices: 12', 'info');
-    line('REFRESH devices: 9', 'info');
-    line('CONNECT devices: 15', 'info');
-    line('LOAD PAGE devices: 12', 'info');
-    line('All devices are ready', 'ok');
+    line('Node pool attached: 48/48 online | target ecocart', 'ok');
+    line('Cluster REQUEST: 12 nodes | Cluster REFRESH: 9 nodes', 'info');
+    line('Cluster CONNECT: 15 nodes | Cluster LOAD PAGE: 12 nodes', 'info');
+    line('All nodes armed | awaiting flood command', 'ok');
     primeInput();
   }
 
@@ -1383,8 +1381,8 @@ function bootAttackerConsole() {
     setNodes('active');
     document.body.classList.add('attacker-running');
     localStorage.setItem('ecocart_system_state', 'attack');
-    line('Attack started against EcoCart ecommerce', 'error');
-    line('48 devices are repeatedly opening Products, Cart, and Checkout', 'warn');
+    line('Flood initiated: ecocart | /products /cart /checkout', 'error');
+    line('48 nodes issuing repeat requests | ramp mode active', 'warn');
 
     const ramp = [2400, 4200, 7100, 12800, 24600, 43800, 68400];
     let position = 0;
@@ -1397,12 +1395,12 @@ function bootAttackerConsole() {
       rejected += Math.round(batch * 0.08);
       drawAttackerBars(Math.round((requestRate / 68400) * 100));
       updateCounters();
-      line(`${requestRate.toLocaleString()} requests per minute`, requestRate < 10000 ? 'info' : requestRate < 40000 ? 'warn' : 'error');
+      line(`Outbound: ${requestRate.toLocaleString()} req/min`, requestRate < 10000 ? 'info' : requestRate < 40000 ? 'warn' : 'error');
       position += 1;
       if (position >= ramp.length) {
         clearInterval(activityTimer);
         stage = 'running';
-        line('EcoCart customers are beginning to experience delays', 'warn');
+        line('Target latency rising | legitimate sessions timing out', 'warn');
         primeInput();
       }
     }, 1100);
@@ -1413,8 +1411,8 @@ function bootAttackerConsole() {
     await new Promise((resolve) => setTimeout(resolve, 700));
     stage = 'surging';
     requestRate = 92000;
-    line('Attack rate increased to 92,000 requests per minute', 'error');
-    line('EcoCart checkout is now timing out for customers', 'error');
+    line('Rate override accepted: 92,000 req/min sustained', 'error');
+    line('Checkout gateway: timing out | 0 successful sessions', 'error');
     drawAttackerBars(100);
     updateCounters();
     primeInput();
@@ -1425,7 +1423,7 @@ function bootAttackerConsole() {
     await new Promise((resolve) => setTimeout(resolve, 600));
     stage = 'holding';
     setAttackerStatus('HOLDING', 'amber');
-    line('Attack will continue at the current rate', 'warn');
+    line('Flood locked at 92,000 req/min | hold engaged', 'warn');
     clearInterval(activityTimer);
     activityTimer = setInterval(() => {
       const filtering = localStorage.getItem('ecocart_system_state') === 'filtering';
@@ -1452,8 +1450,8 @@ function bootAttackerConsole() {
     setNodes('offline');
     drawAttackerBars(0);
     updateCounters();
-    line('Attack against EcoCart stopped', 'info');
-    line('All devices disconnected', 'info');
+    line('Flood terminated | all routes released', 'info');
+    line('Node pool detached: 0/48 online', 'info');
     primeInput();
   }
 
@@ -1527,9 +1525,9 @@ function bootAttackerConsole() {
     drawAttackerBars(0);
     updateCounters();
     command('trafficctl status');
-    line('Traffic controller ready', 'ok');
-    line('EcoCart target is not selected', 'info');
-    line('Connected devices: 0', 'info');
+    line('Traffic controller online | standby', 'ok');
+    line('No target locked', 'info');
+    line('Node pool: 0/48 attached', 'info');
     primeInput();
   }
 
@@ -1565,12 +1563,12 @@ function bootAttackerConsole() {
       return;
     }
     if (event.newValue === 'filtering') {
-      line('Most repeated requests are being blocked', 'error');
+      line('Upstream rejecting traffic | most repeats dropped', 'error');
       setAttackerStatus('LIMITED', 'amber');
     }
     if (event.newValue === 'healthy') {
-      line('EcoCart services are responding again', 'warn');
-      line('Repeated requests are no longer reaching the website', 'warn');
+      line('Target responding normally | mitigation active', 'warn');
+      line('Repeats no longer reaching ecocart | flood ineffective', 'warn');
       setAttackerStatus('BLOCKED', 'rose');
     }
   });

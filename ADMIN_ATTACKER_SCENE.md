@@ -42,13 +42,13 @@ website:
 
 `targetctl select --host [deployed EcoCart host] --service ecocart`
 
-The console plainly reports `Target selected: EcoCart ecommerce`. The Attacker
+The console reports `Target locked: ecocart.ecommerce`. The Attacker
 types again:
 
 `nodectl attach --pool device-48 --groups req,refresh,connect,page`
 
-The console reports `48 devices connected to the EcoCart target` and `All
-devices are ready`. The four groups raise their devices or signs.
+The console reports `Node pool attached: 48/48 online` and `All nodes armed`.
+The four groups raise their devices or signs.
 
 ATTACKER
 
