@@ -17,6 +17,27 @@ function offline_order_number(string $email): string
     return 'ECV-' . strtoupper(substr(hash('sha256', $email . microtime(true)), 0, 6));
 }
 
+function queue_offline_order(string $orderId, string $reason, string $name, string $email, string $phone, string $address, array $cart, float $subtotal, float $total): void
+{
+    $payload = [
+        'order_id' => $orderId,
+        'reason' => $reason,
+        'created_at' => date(DATE_ATOM),
+        'customer_name' => $name,
+        'email' => $email,
+        'phone' => $phone,
+        'address' => $address,
+        'cart' => $cart,
+        'subtotal' => round($subtotal, 2),
+        'total' => round($total, 2),
+    ];
+
+    $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES);
+    if ($encoded === false || @file_put_contents(__DIR__ . '/includes/order-queue.jsonl', $encoded . PHP_EOL, FILE_APPEND | LOCK_EX) === false) {
+        error_log("[EcoCart checkout] could not write offline order {$orderId}");
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
         http_response_code(403);
@@ -86,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $orderId = offline_order_number($email);
             $orderQueued = true;
             $success = true;
+            queue_offline_order($orderId, 'database unavailable', $name, $email, $phone, $address, $cart, $subtotal, $orderTotal);
             error_log("[EcoCart checkout] database unavailable; queued offline order {$orderId}");
         } else {
             try {
@@ -107,6 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $orderId = offline_order_number($email);
                 $orderQueued = true;
                 $success = true;
+                queue_offline_order($orderId, 'database insert failed', $name, $email, $phone, $address, $cart, $subtotal, $orderTotal);
                 error_log("[EcoCart checkout] database order insert failed; queued offline order {$orderId}: " . $error->getMessage());
             }
         }

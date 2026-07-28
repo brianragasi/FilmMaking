@@ -10,10 +10,10 @@ installer/
 
 # Local database credentials must never be committed
 includes/config.local.php
+includes/order-queue.jsonl
 
 # Editor and operating-system files
 .idea/
 .vscode/
 .DS_Store
 Thumbs.db
-
