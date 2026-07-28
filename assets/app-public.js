@@ -52,6 +52,11 @@ function setSystemState(state) {
   applySystemState();
 }
 
+function checkoutIncidentModeEnabled() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has('scene') || document.body.dataset.checkoutIncident === 'true';
+}
+
 function applySystemState() {
   const stateKey = getSystemState();
   const state = systemStates[stateKey];
@@ -88,16 +93,17 @@ function applySystemState() {
   });
 
   const checkoutError = document.querySelector('[data-checkout-error]');
+  const checkoutBlocked = stateKey === 'attack' && checkoutIncidentModeEnabled();
   if (checkoutError) {
-    checkoutError.classList.toggle('hidden', stateKey !== 'attack');
+    checkoutError.classList.toggle('hidden', !checkoutBlocked);
   }
 
   const placeOrder = document.querySelector('[data-place-order]');
   if (placeOrder) {
     const hasItems = getCart().length > 0;
-    placeOrder.disabled = stateKey === 'attack' || !hasItems;
-    placeOrder.classList.toggle('btn-disabled', stateKey === 'attack' || !hasItems);
-    if (stateKey === 'attack') {
+    placeOrder.disabled = checkoutBlocked || !hasItems;
+    placeOrder.classList.toggle('btn-disabled', checkoutBlocked || !hasItems);
+    if (checkoutBlocked) {
       placeOrder.querySelector('span').textContent = 'Checkout unavailable';
     } else {
       placeOrder.querySelector('span').textContent = hasItems ? 'Place order' : 'Add items to continue';
@@ -1215,7 +1221,7 @@ function bootCheckoutGuard() {
       return;
     }
 
-    if (getSystemState() !== 'attack') {
+    if (getSystemState() !== 'attack' || !checkoutIncidentModeEnabled()) {
       return;
     }
 

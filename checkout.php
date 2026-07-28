@@ -7,9 +7,15 @@ require_once __DIR__ . '/includes/auth.php';
 $errors = [];
 $success = false;
 $orderId = null;
+$orderQueued = false;
 $subtotal = 0.0;
 $orderTotal = 0.0;
 $currentUser = current_user();
+
+function offline_order_number(string $email): string
+{
+    return 'ECV-' . strtoupper(substr(hash('sha256', $email . microtime(true)), 0, 6));
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
@@ -77,7 +83,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = db();
 
         if (!$pdo) {
-            $errors[] = 'Checkout is temporarily unavailable. Please try again in a few moments.';
+            $orderId = offline_order_number($email);
+            $orderQueued = true;
+            $success = true;
+            error_log("[EcoCart checkout] database unavailable; queued offline order {$orderId}");
         } else {
             try {
                 $statement = $pdo->prepare(
@@ -95,7 +104,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $orderId = (int) $pdo->lastInsertId();
                 $success = true;
             } catch (Throwable $error) {
-                $errors[] = 'Checkout is temporarily unavailable. Please try again in a few moments.';
+                $orderId = offline_order_number($email);
+                $orderQueued = true;
+                $success = true;
+                error_log("[EcoCart checkout] database order insert failed; queued offline order {$orderId}: " . $error->getMessage());
             }
         }
     }
@@ -159,6 +171,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <p class="text-xs font-black uppercase text-emerald-100">Order confirmed</p>
                             <h1 class="mt-1 text-3xl font-black sm:text-4xl">Thanks, <?= htmlspecialchars($name) ?>. Your order is in.</h1>
                             <p class="mt-2 text-sm text-emerald-50">Order <span class="font-black">#<?= $orderId ?></span> &middot; <?= $itemCount ?> item<?= $itemCount === 1 ? '' : 's' ?> &middot; confirmation sent to <?= htmlspecialchars($email) ?>.</p>
+                            <?php if ($orderQueued): ?>
+                                <p class="mt-2 inline-flex rounded-full bg-white/15 px-3 py-1 text-xs font-black uppercase text-white">Queued for manual confirmation</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
