@@ -4,6 +4,14 @@ This focused version uses only the Attacker, Server Admin 1, and Server Admin 2.
 The commands are shown on screen but are not spoken aloud. Actors only say the
 short dialogue after each console response appears.
 
+Every command below is written in real command-line style (`systemctl`,
+`edgectl`, `wafctl`, `trafficctl`, and so on) so the screens look like genuine
+operations and attack tooling on camera. The command names are cinematic
+dressing only. The console **responses** stay in plain English so the audience
+can still follow the story. These commands match exactly what appears on
+`admin.php` and the Traffic Control terminal, so treat this file as the
+on-screen script.
+
 ## Screens
 
 - Server admins use `admin.php` on the deployed EcoCart website.
@@ -55,8 +63,16 @@ groups repeat their movements faster each time the number increases.
 
 ## Scene 2 - EcoCart IT Office
 
-SERVER ADMIN 1 is already watching the production dashboard. The starting
-traffic is 2,340 requests per minute.
+SERVER ADMIN 1 is already watching the production dashboard. The console opens
+on the system status check:
+
+`systemctl status ecocart.target`
+
+The console plainly reports that website, cart, and checkout are ready and that
+traffic is 2,340 requests per minute. SERVER ADMIN 1 types again to attach the
+live trace:
+
+`edgectl monitor --live --routes /products,/cart,/checkout`
 
 SERVER ADMIN 1
 
@@ -85,7 +101,7 @@ timing out.
 
 SERVER ADMIN 2 types random keys:
 
-`show repeated requests`
+`edgectl inspect --repeats --top 4`
 
 The console shows repeated checkout, cart, and product requests.
 
@@ -102,13 +118,18 @@ ATTACKER
 
 Faster. Keep it going.
 
-The attacker console reports that EcoCart checkout is timing out.
+The attacker console reports that EcoCart checkout is timing out. The Attacker
+types once more to lock the flood at that rate while the admins scramble:
+
+`trafficctl hold --target ecocart`
+
+The console reports the attack will continue at the current rate.
 
 ## Scene 4 - Check Customer Safety
 
 SERVER ADMIN 1 types:
 
-`check customer accounts and orders`
+`auditctl verify --scope accounts,orders`
 
 The console reports no suspicious account access and no unauthorized order
 changes.
@@ -126,7 +147,7 @@ The fake requests are taking the space meant for real customers.
 
 SERVER ADMIN 1 types:
 
-`slow repeated traffic`
+`ratectl limit --sources repeated --rate 40/10s`
 
 The console reports that rate limiting is active.
 
@@ -138,7 +159,7 @@ The blocked-request counter begins increasing.
 
 SERVER ADMIN 2 types:
 
-`start traffic filtering`
+`wafctl deploy --filter ddos --mode block`
 
 The console reports that suspicious traffic is being blocked and that the
 checkout waiting requests dropped from 1,842 to 126.
@@ -158,7 +179,7 @@ They're filtering it.
 
 SERVER ADMIN 2 types:
 
-`test website cart and checkout`
+`healthctl probe --routes storefront,cart,checkout`
 
 The console reports:
 
@@ -179,6 +200,30 @@ Cut to the Attacker. The Attacker types:
 `trafficctl stop --target ecocart --all`
 
 The attacker screen drops to zero and the device groups lower their signs.
+
+## Command Reference
+
+Type random keys until each command fully appears, then press Enter. These are
+the exact on-screen commands, in order.
+
+Attacker terminal (Traffic Control):
+
+1. `targetctl select --host [deployed EcoCart host] --service ecocart`
+2. `nodectl attach --pool device-48 --groups req,refresh,connect,page`
+3. `trafficctl run --target ecocart --routes /products,/cart,/checkout --ramp`
+4. `trafficctl rate --target ecocart --set 92000rpm`
+5. `trafficctl hold --target ecocart`
+6. `trafficctl stop --target ecocart --all`
+
+Admin console (`admin.php`):
+
+1. `systemctl status ecocart.target`
+2. `edgectl monitor --live --routes /products,/cart,/checkout`
+3. `edgectl inspect --repeats --top 4`
+4. `auditctl verify --scope accounts,orders`
+5. `ratectl limit --sources repeated --rate 40/10s`
+6. `wafctl deploy --filter ddos --mode block`
+7. `healthctl probe --routes storefront,cart,checkout`
 
 ## What Is Happening
 

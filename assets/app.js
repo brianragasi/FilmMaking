@@ -523,6 +523,7 @@ function bootTerminal() {
   let completedSteps = 0;
   let telemetryTimer = null;
   let incidentTimer = null;
+  let idleTimer = null;
   let actionLocked = false;
 
   function line(text, tone = 'info', prompt = '') {
@@ -727,11 +728,32 @@ function bootTerminal() {
     }, 900);
   }
 
+  function startIdleTelemetry() {
+    clearInterval(idleTimer);
+    idleTimer = setInterval(() => {
+      if (stage !== 'idle') {
+        return;
+      }
+      requestCount = 2340 + Math.floor(Math.random() * 150) - 60;
+      setMetrics({
+        errors: `${(0.14 + Math.random() * 0.12).toFixed(2)}%`,
+        latency: `${Math.round(176 + Math.random() * 26)} ms`,
+        checkout: 'Online',
+      });
+      routes.products.textContent = `${Math.round(700 + Math.random() * 96).toLocaleString()} rpm`;
+      routes.cart.textContent = `${Math.round(300 + Math.random() * 52).toLocaleString()} rpm`;
+      routes.checkout.textContent = `${Math.round(118 + Math.random() * 30).toLocaleString()} rpm`;
+      routes.saturation.textContent = `${Math.round(16 + Math.random() * 6)}%`;
+      drawBars('healthy');
+    }, 1500);
+  }
+
   function startTrace() {
     if (stage !== 'idle') {
       return;
     }
     stage = 'monitoring';
+    clearInterval(idleTimer);
     startButton.disabled = true;
     startButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Trace active';
     command('edgectl monitor --live --routes /products,/cart,/checkout');
@@ -964,6 +986,7 @@ function bootTerminal() {
   function resetOperations() {
     clearInterval(telemetryTimer);
     clearInterval(incidentTimer);
+    clearInterval(idleTimer);
     stage = 'idle';
     actionLocked = false;
     requestCount = 2340;
@@ -1006,6 +1029,7 @@ function bootTerminal() {
     if (window.lucide) {
       window.lucide.createIcons();
     }
+    startIdleTelemetry();
     primeCinematicInput();
   }
 
