@@ -46,7 +46,7 @@ jobs:
           protocol: ftps
           port: 21
           local-dir: ./
-          server-dir: /htdocs/
+          server-dir: /ecocart-mnl.site.je/htdocs/
           timeout: 120000
           log-level: standard
           exclude: |
@@ -64,4 +64,3 @@ jobs:
             **/database/**
             **/story.txt
             **/includes/config.local.php
-

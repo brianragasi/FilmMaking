@@ -1,26 +1,16 @@
 # EcoCart Deployment
 
-## 1. Connect highlandfresh.codes
+## Production address
 
-In Name.com, open `highlandfresh.codes`, choose **Manage Nameservers**, and
-replace the current nameservers with:
+EcoCart is deployed to:
 
 ```text
-ns1.infinityfree.com
-ns2.infinityfree.com
+https://ecocart-mnl.site.je
 ```
 
-Do not enter these in the A-record form. Nameserver changes can take from a few
-hours to a few days to propagate.
-
-In InfinityFree, return to **Add Domain**:
-
-1. Enter `highlandfresh.codes`.
-2. Select `highlandfresh.infinityfree.io/htdocs` as the directory alias.
-3. Click **Add Domain**.
-
-Using the alias makes the free subdomain and custom domain serve the same
-`/htdocs` files.
+The InfinityFree document root is `/ecocart-mnl.site.je/htdocs/`. If the domain
+health check says the directory is missing, use **Recreate Directory** before
+running the deployment workflow.
 
 ## 2. Add GitHub deployment secrets
 
@@ -45,7 +35,7 @@ push to `main`. It can also be started from the repository's **Actions** tab
 using **Run workflow**.
 
 It builds `public/output.css`, validates `assets/app.js`, and synchronizes the
-runtime files to `/htdocs/` over FTPS.
+runtime files to `/ecocart-mnl.site.je/htdocs/` over FTPS.
 
 ## 4. Configure the InfinityFree database
 
@@ -70,4 +60,3 @@ git push
 ```
 
 The GitHub **Actions** tab shows whether the InfinityFree deployment succeeded.
-
