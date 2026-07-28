@@ -2,10 +2,42 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/products.php';
 
 $user = require_login();
 auth_no_store();
 $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['name']);
+
+$isAdmin = ($user['role'] ?? '') === 'admin';
+$memberSince = null;
+$orderCount = 0;
+$orderSpend = 0.0;
+$recentOrders = [];
+
+if ($pdo = db()) {
+    try {
+        $createdStmt = $pdo->prepare('SELECT created_at FROM users WHERE id = :id LIMIT 1');
+        $createdStmt->execute(['id' => (int) $user['id']]);
+        $memberSince = $createdStmt->fetchColumn() ?: null;
+
+        if ($isAdmin) {
+            $orderCount = (int) $pdo->query('SELECT COUNT(*) FROM orders')->fetchColumn();
+            $orderSpend = (float) $pdo->query('SELECT COALESCE(SUM(subtotal), 0) FROM orders')->fetchColumn();
+            $recentOrders = $pdo->query('SELECT id, customer_name, email, subtotal, status, cart_json, created_at FROM orders ORDER BY id DESC LIMIT 5')->fetchAll(PDO::FETCH_ASSOC);
+        } else {
+            $statsStmt = $pdo->prepare('SELECT COUNT(*), COALESCE(SUM(subtotal), 0) FROM orders WHERE email = :email');
+            $statsStmt->execute(['email' => (string) $user['email']]);
+            [$orderCount, $orderSpend] = array_map('floatval', (array) $statsStmt->fetch(PDO::FETCH_NUM));
+            $orderCount = (int) $orderCount;
+
+            $ordersStmt = $pdo->prepare('SELECT id, customer_name, email, subtotal, status, cart_json, created_at FROM orders WHERE email = :email ORDER BY id DESC LIMIT 5');
+            $ordersStmt->execute(['email' => (string) $user['email']]);
+            $recentOrders = $ordersStmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+    } catch (Throwable $error) {
+        $recentOrders = [];
+    }
+}
 ?>
 <!doctype html>
 <html lang="en" data-theme="light">
@@ -19,7 +51,7 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="min-h-screen bg-[#f4f5f7] text-slate-950">
+<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950">
     <div class="bg-rose-600 text-white">
         <div class="app-shell flex min-h-9 items-center justify-center gap-2 text-[10px] font-black uppercase">
             <i data-lucide="badge-check" class="h-3.5 w-3.5"></i>
@@ -46,7 +78,7 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
         </div>
     </header>
 
-    <main class="app-shell py-6 sm:py-8">
+    <main class="app-shell w-full flex-1 py-6 sm:py-8">
         <?php if (isset($_GET['denied'])): ?>
             <div class="mb-5 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
                 <div class="flex items-start gap-3">
@@ -74,6 +106,21 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
                     <p class="mt-4 inline-flex rounded-full bg-emerald-400/12 px-3 py-1 text-xs font-black uppercase text-emerald-300">
                         <?= ($user['role'] ?? '') === 'admin' ? 'Operations admin' : 'Customer' ?>
                     </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 divide-y divide-slate-100 border-b border-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                <div class="flex items-center gap-3 p-5">
+                    <span class="grid h-10 w-10 place-items-center rounded-lg bg-rose-100 text-rose-600"><i data-lucide="shopping-bag" class="h-5 w-5"></i></span>
+                    <div><p class="text-xl font-black"><?= number_format($orderCount) ?></p><p class="text-xs font-bold text-slate-500"><?= $isAdmin ? 'Store orders' : 'Orders placed' ?></p></div>
+                </div>
+                <div class="flex items-center gap-3 p-5">
+                    <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-100 text-emerald-700"><i data-lucide="wallet" class="h-5 w-5"></i></span>
+                    <div><p class="text-xl font-black"><?= peso($orderSpend) ?></p><p class="text-xs font-bold text-slate-500"><?= $isAdmin ? 'Store revenue' : 'Total spent' ?></p></div>
+                </div>
+                <div class="flex items-center gap-3 p-5">
+                    <span class="grid h-10 w-10 place-items-center rounded-lg bg-cyan-100 text-cyan-700"><i data-lucide="calendar-days" class="h-5 w-5"></i></span>
+                    <div><p class="text-xl font-black"><?= $memberSince ? htmlspecialchars(date('M Y', strtotime((string) $memberSince))) : 'New' ?></p><p class="text-xs font-bold text-slate-500">Member since</p></div>
                 </div>
             </div>
 
@@ -106,8 +153,58 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
                     </div>
                 </aside>
             </div>
+
+            <div class="border-t border-slate-100 p-6 sm:p-8">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-3">
+                        <span class="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white"><i data-lucide="receipt" class="h-5 w-5"></i></span>
+                        <div>
+                            <h2 class="font-black"><?= $isAdmin ? 'Recent store orders' : 'Recent orders' ?></h2>
+                            <p class="text-xs text-slate-500"><?= $isAdmin ? 'Latest orders across EcoCart' : 'Your latest EcoCart orders' ?></p>
+                        </div>
+                    </div>
+                    <a class="text-xs font-black text-rose-600 hover:text-rose-700" href="index.php#products">Shop again &rarr;</a>
+                </div>
+
+                <?php if ($recentOrders): ?>
+                    <ul class="mt-5 divide-y divide-slate-100 border-y border-slate-100">
+                        <?php foreach ($recentOrders as $order): ?>
+                            <?php
+                                $items = json_decode((string) ($order['cart_json'] ?? '[]'), true);
+                                $itemCount = 0;
+                                foreach (is_array($items) ? $items : [] as $it) { $itemCount += (int) ($it['quantity'] ?? 0); }
+                                $status = (string) ($order['status'] ?? 'Pending');
+                                $statusClass = $status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' : ($status === 'Shipped' ? 'bg-cyan-100 text-cyan-700' : 'bg-amber-100 text-amber-700');
+                            ?>
+                            <li class="flex flex-wrap items-center gap-3 py-4">
+                                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500"><i data-lucide="package" class="h-5 w-5"></i></span>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-bold">Order #<?= (int) $order['id'] ?><?= $isAdmin ? ' &middot; ' . htmlspecialchars((string) $order['customer_name']) : '' ?></p>
+                                    <p class="text-xs text-slate-500"><?= htmlspecialchars(date('M j, Y', strtotime((string) $order['created_at']))) ?> &middot; <?= $itemCount ?> item<?= $itemCount === 1 ? '' : 's' ?></p>
+                                </div>
+                                <span class="rounded-full px-2.5 py-1 text-[10px] font-black uppercase <?= $statusClass ?>"><?= htmlspecialchars($status) ?></span>
+                                <p class="w-24 shrink-0 text-right font-black"><?= peso((float) $order['subtotal']) ?></p>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="mt-5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+                        <span class="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-rose-100 text-rose-600"><i data-lucide="shopping-cart" class="h-6 w-6"></i></span>
+                        <p class="mt-3 font-black">No orders yet.</p>
+                        <p class="mx-auto mt-1 max-w-sm text-sm text-slate-500">Your Big Blowout orders will appear here once you check out.</p>
+                        <a class="btn mt-4 border-0 bg-slate-950 text-white hover:bg-rose-600" href="index.php#products">Browse sale items</a>
+                    </div>
+                <?php endif; ?>
+            </div>
         </section>
     </main>
+
+    <footer class="mt-6 border-t border-slate-200 bg-white">
+        <div class="app-shell flex flex-wrap items-center justify-between gap-3 py-5 text-xs text-slate-500">
+            <p>&copy; <?= date('Y') ?> EcoCart</p>
+            <div class="flex items-center gap-4"><span>Secure order handling</span><span>Customer support: +63 917 555 0142</span></div>
+        </div>
+    </footer>
 
     <script>lucide.createIcons();</script>
 </body>

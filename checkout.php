@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="min-h-screen bg-[#f4f5f7] text-slate-950">
+<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950">
     <div class="bg-rose-600 text-white">
         <div class="app-shell flex min-h-8 items-center justify-center gap-2 text-center text-[10px] font-black uppercase">
             <i data-lucide="tag" class="h-3.5 w-3.5"></i>
@@ -143,22 +143,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </header>
 
-    <main class="app-shell py-7 sm:py-10">
+    <main class="app-shell w-full flex-1 py-7 sm:py-10">
         <?php if ($success): ?>
-            <section class="mx-auto max-w-3xl overflow-hidden rounded-lg border border-emerald-200 bg-white shadow-xl">
+            <?php
+                $arriveStart = date('D, M j', strtotime('+2 days'));
+                $arriveEnd = date('D, M j', strtotime('+5 days'));
+                $itemCount = 0;
+                foreach ($cart as $ci) { $itemCount += (int) $ci['quantity']; }
+            ?>
+            <section class="mx-auto max-w-5xl overflow-hidden rounded-lg border border-emerald-200 bg-white shadow-xl">
                 <div class="bg-emerald-600 px-6 py-8 text-white sm:px-10">
-                    <span class="grid h-14 w-14 place-items-center rounded-lg bg-white text-emerald-600"><i data-lucide="check" class="h-8 w-8"></i></span>
-                    <p class="mt-6 text-xs font-black uppercase text-emerald-100">Order confirmed</p>
-                    <h1 class="mt-2 text-3xl font-black sm:text-4xl">Thanks, <?= htmlspecialchars($name) ?>. Your order is in.</h1>
-                    <p class="mt-3 text-sm text-emerald-50">We sent the order details to <?= htmlspecialchars($email) ?>.</p>
+                    <div class="flex flex-wrap items-center gap-5">
+                        <span class="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-white text-emerald-600"><i data-lucide="check" class="h-8 w-8"></i></span>
+                        <div class="min-w-0">
+                            <p class="text-xs font-black uppercase text-emerald-100">Order confirmed</p>
+                            <h1 class="mt-1 text-3xl font-black sm:text-4xl">Thanks, <?= htmlspecialchars($name) ?>. Your order is in.</h1>
+                            <p class="mt-2 text-sm text-emerald-50">Order <span class="font-black">#<?= $orderId ?></span> &middot; <?= $itemCount ?> item<?= $itemCount === 1 ? '' : 's' ?> &middot; confirmation sent to <?= htmlspecialchars($email) ?>.</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="grid gap-6 p-6 sm:grid-cols-3 sm:p-10">
-                    <div><p class="text-[10px] font-black uppercase text-slate-400">Order number</p><p class="mt-1 text-lg font-black">#<?= $orderId ?></p></div>
-                    <div><p class="text-[10px] font-black uppercase text-slate-400">Amount</p><p class="mt-1 text-lg font-black text-rose-600"><?= peso($orderTotal) ?></p></div>
-                    <div><p class="text-[10px] font-black uppercase text-slate-400">Payment</p><p class="mt-1 text-lg font-black">Cash on delivery</p></div>
-                    <a class="btn border-0 bg-slate-950 text-white hover:bg-rose-600 sm:col-span-3" href="index.php">
-                        Continue shopping <i data-lucide="arrow-right" class="h-4 w-4"></i>
-                    </a>
+
+                <div class="grid gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(0,1fr)_330px]">
+                    <div class="space-y-8">
+                        <div>
+                            <div class="flex items-center justify-between">
+                                <h2 class="text-lg font-black">Items in this order</h2>
+                                <span class="text-xs font-bold text-slate-400"><?= $itemCount ?> item<?= $itemCount === 1 ? '' : 's' ?></span>
+                            </div>
+                            <ul class="mt-4 divide-y divide-slate-100 border-y border-slate-100">
+                                <?php foreach ($cart as $item): ?>
+                                    <li class="flex items-center gap-4 py-4">
+                                        <img class="h-16 w-16 shrink-0 rounded-lg border border-slate-200 object-cover" src="<?= htmlspecialchars($item['image_url']) ?>" alt="<?= htmlspecialchars($item['name']) ?>">
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate font-bold"><?= htmlspecialchars($item['name']) ?></p>
+                                            <p class="text-xs text-slate-500"><?= htmlspecialchars($item['category']) ?> &middot; Qty <?= (int) $item['quantity'] ?></p>
+                                        </div>
+                                        <p class="shrink-0 font-black"><?= peso((float) $item['price'] * (int) $item['quantity']) ?></p>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h2 class="text-lg font-black">Delivery details</h2>
+                            <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                                <div class="rounded-lg border border-slate-200 p-4">
+                                    <p class="flex items-center gap-2 text-xs font-black uppercase text-slate-400"><i data-lucide="map-pin" class="h-4 w-4 text-rose-600"></i> Deliver to</p>
+                                    <p class="mt-2 font-bold"><?= htmlspecialchars($name) ?></p>
+                                    <p class="mt-1 text-sm leading-6 text-slate-600"><?= nl2br(htmlspecialchars($address)) ?></p>
+                                    <p class="mt-1 text-sm font-bold text-slate-600"><?= htmlspecialchars($phone) ?></p>
+                                </div>
+                                <div class="rounded-lg border border-slate-200 p-4">
+                                    <p class="flex items-center gap-2 text-xs font-black uppercase text-slate-400"><i data-lucide="truck" class="h-4 w-4 text-cyan-600"></i> Standard delivery</p>
+                                    <p class="mt-2 font-bold">Estimated arrival</p>
+                                    <p class="mt-1 text-sm font-black text-emerald-700"><?= $arriveStart ?> &ndash; <?= $arriveEnd ?></p>
+                                    <p class="mt-1 text-xs text-slate-500">You&apos;ll get an SMS when it&apos;s on the way.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside class="space-y-6">
+                        <div class="rounded-lg border border-slate-200 bg-slate-50 p-5">
+                            <h2 class="text-sm font-black uppercase text-slate-500">Order summary</h2>
+                            <dl class="mt-4 space-y-2.5 text-sm">
+                                <div class="flex justify-between"><dt class="text-slate-500">Order number</dt><dd class="font-bold">#<?= $orderId ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Subtotal</dt><dd class="font-bold"><?= peso($subtotal) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Big Blowout discount</dt><dd class="font-bold text-emerald-700">-<?= peso($discount) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Delivery</dt><dd class="font-bold"><?= $shipping > 0 ? peso($shipping) : 'FREE' ?></dd></div>
+                                <div class="my-3 h-px bg-slate-200"></div>
+                                <div class="flex items-end justify-between"><dt class="font-black">Total</dt><dd class="text-xl font-black text-rose-600"><?= peso($orderTotal) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Payment</dt><dd class="font-bold">Cash on delivery</dd></div>
+                            </dl>
+                        </div>
+
+                        <div class="rounded-lg border border-slate-200 p-5">
+                            <h2 class="text-sm font-black uppercase text-slate-500">What happens next</h2>
+                            <ol class="mt-4 space-y-4">
+                                <li class="flex gap-3">
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-600 text-white"><i data-lucide="check" class="h-4 w-4"></i></span>
+                                    <div><p class="text-sm font-bold">Order placed</p><p class="text-xs text-slate-500">We&apos;ve received your order.</p></div>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-200 text-slate-500"><i data-lucide="package" class="h-4 w-4"></i></span>
+                                    <div><p class="text-sm font-bold">Packed</p><p class="text-xs text-slate-500">We&apos;re preparing your items.</p></div>
+                                </li>
+                                <li class="flex gap-3">
+                                    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-slate-200 text-slate-500"><i data-lucide="truck" class="h-4 w-4"></i></span>
+                                    <div><p class="text-sm font-bold">Out for delivery</p><p class="text-xs text-slate-500">Cash on delivery &middot; have payment ready.</p></div>
+                                </li>
+                            </ol>
+                        </div>
+
+                        <a class="btn w-full border-0 bg-slate-950 text-white hover:bg-rose-600" href="index.php">
+                            Continue shopping <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                        </a>
+                    </aside>
                 </div>
             </section>
             <script>localStorage.removeItem('ecocart_cart');</script>
