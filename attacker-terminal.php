@@ -129,6 +129,6 @@ if ($targetHost === '' || $targetHost === null) {
         </aside>
     </main>
 
-    <script src="assets/app.js"></script>
+    <script src="assets/app.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app.js')) ?>"></script>
 </body>
 </html>
