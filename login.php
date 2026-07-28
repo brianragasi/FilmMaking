@@ -75,95 +75,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="min-h-screen bg-[#f4f5f7] text-slate-950">
-    <main class="grid min-h-screen lg:grid-cols-[minmax(360px,0.82fr)_minmax(0,1.18fr)]">
-        <section class="flex min-h-screen flex-col bg-white px-6 py-6 sm:px-12 lg:px-16">
+<body class="min-h-screen bg-[#f6f7f9] text-slate-950">
+    <main class="grid min-h-screen lg:grid-cols-[minmax(420px,0.74fr)_minmax(0,1.26fr)]">
+        <section class="flex min-h-screen flex-col bg-white px-5 py-4 sm:px-8 lg:px-12">
             <header class="flex items-center justify-between gap-4">
                 <a class="flex items-center gap-2" href="index.php" aria-label="EcoCart home">
-                    <span class="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white"><i data-lucide="leaf" class="h-5 w-5"></i></span>
-                    <span class="text-2xl font-black">Eco<span class="text-rose-600">Cart.</span></span>
+                    <span class="grid h-9 w-9 place-items-center rounded-lg bg-slate-950 text-white"><i data-lucide="leaf" class="h-5 w-5"></i></span>
+                    <span class="text-xl font-black sm:text-2xl">Eco<span class="text-rose-600">Cart.</span></span>
                 </a>
                 <a class="btn btn-square btn-sm border-slate-200 bg-white" href="index.php" aria-label="Return to store" title="Return to store">
                     <i data-lucide="x" class="h-4 w-4"></i>
                 </a>
             </header>
 
-            <div class="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-12">
-                <p class="text-xs font-black uppercase text-rose-600"><?= $mode === 'register' ? 'Join EcoCart' : 'Welcome back' ?></p>
-                <h1 class="mt-2 text-3xl font-black sm:text-4xl"><?= $mode === 'register' ? 'Create your account' : 'Sign in to your account' ?></h1>
-                <p class="mt-3 text-sm leading-6 text-slate-500"><?= $mode === 'register' ? 'Keep your details ready for a faster checkout.' : 'Continue shopping with your saved account details.' ?></p>
+            <div class="mx-auto flex w-full max-w-[460px] flex-1 flex-col justify-start pb-8 pt-16 sm:justify-center sm:py-10">
+                <div class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+                    <p class="text-xs font-black uppercase text-rose-600"><?= $mode === 'register' ? 'Join EcoCart' : 'Welcome back' ?></p>
+                    <h1 class="mt-1.5 text-3xl font-black leading-tight"><?= $mode === 'register' ? 'Create your account' : 'Sign in to your account' ?></h1>
+                    <p class="mt-2 text-sm leading-6 text-slate-500"><?= $mode === 'register' ? 'Keep your details ready for a faster checkout.' : 'Continue shopping with your saved account details.' ?></p>
 
-                <div class="mt-7 grid grid-cols-2 rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Account access">
-                    <a class="btn btn-sm border-0 <?= $mode === 'login' ? 'bg-white text-slate-950 shadow-sm' : 'bg-transparent text-slate-500' ?>" href="login.php?mode=login&amp;next=<?= rawurlencode($next) ?>">Sign in</a>
-                    <a class="btn btn-sm border-0 <?= $mode === 'register' ? 'bg-white text-slate-950 shadow-sm' : 'bg-transparent text-slate-500' ?>" href="login.php?mode=register&amp;next=<?= rawurlencode($next) ?>">Create account</a>
-                </div>
-
-                <?php if ($errors): ?>
-                    <div class="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-900" role="alert">
-                        <div class="flex items-start gap-3">
-                            <i data-lucide="circle-alert" class="mt-0.5 h-5 w-5 shrink-0 text-rose-600"></i>
-                            <div>
-                                <?php foreach (array_unique($errors) as $error): ?>
-                                    <p><?= htmlspecialchars($error) ?></p>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
+                    <div class="mt-5 grid grid-cols-2 rounded-lg bg-slate-100 p-1" role="tablist" aria-label="Account access">
+                        <a class="btn btn-sm min-h-9 border-0 <?= $mode === 'login' ? 'bg-white text-slate-950 shadow-sm' : 'bg-transparent text-slate-500' ?>" href="login.php?mode=login&amp;next=<?= rawurlencode($next) ?>">Sign in</a>
+                        <a class="btn btn-sm min-h-9 border-0 <?= $mode === 'register' ? 'bg-white text-slate-950 shadow-sm' : 'bg-transparent text-slate-500' ?>" href="login.php?mode=register&amp;next=<?= rawurlencode($next) ?>">Create account</a>
                     </div>
-                <?php endif; ?>
 
-                <form class="mt-6 space-y-4" method="post">
-                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                    <input type="hidden" name="mode" value="<?= htmlspecialchars($mode) ?>">
-                    <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
-
-                    <?php if ($mode === 'register'): ?>
-                        <label class="block">
-                            <span class="mb-1.5 block text-xs font-black">Full name</span>
-                            <div class="relative">
-                                <i data-lucide="user-round" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
-                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white pl-10 focus:border-slate-950 focus:outline-none" name="name" autocomplete="name" maxlength="120" value="<?= htmlspecialchars((string) ($_POST['name'] ?? '')) ?>" required>
+                    <?php if ($errors): ?>
+                        <div class="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900" role="alert">
+                            <div class="flex items-start gap-3">
+                                <i data-lucide="circle-alert" class="mt-0.5 h-5 w-5 shrink-0 text-rose-600"></i>
+                                <div>
+                                    <?php foreach (array_unique($errors) as $error): ?>
+                                        <p><?= htmlspecialchars($error) ?></p>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
-                        </label>
+                        </div>
                     <?php endif; ?>
 
-                    <label class="block">
-                        <span class="mb-1.5 block text-xs font-black">Email address</span>
-                        <div class="relative">
-                            <i data-lucide="mail" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
-                            <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white pl-10 focus:border-slate-950 focus:outline-none" type="email" name="email" autocomplete="email" maxlength="160" value="<?= htmlspecialchars((string) ($_POST['email'] ?? '')) ?>" required>
-                        </div>
-                    </label>
+                    <form class="mt-5 space-y-3" method="post">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                        <input type="hidden" name="mode" value="<?= htmlspecialchars($mode) ?>">
+                        <input type="hidden" name="next" value="<?= htmlspecialchars($next) ?>">
 
-                    <label class="block">
-                        <span class="mb-1.5 block text-xs font-black">Password</span>
-                        <div class="relative">
-                            <i data-lucide="lock-keyhole" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
-                            <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white pl-10 focus:border-slate-950 focus:outline-none" type="password" name="password" autocomplete="<?= $mode === 'register' ? 'new-password' : 'current-password' ?>" minlength="10" maxlength="72" required>
-                        </div>
-                    </label>
+                        <?php if ($mode === 'register'): ?>
+                            <label class="block">
+                                <span class="mb-1 block text-xs font-black">Full name</span>
+                                <div class="relative">
+                                    <i data-lucide="user-round" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
+                                    <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" name="name" autocomplete="name" maxlength="120" value="<?= htmlspecialchars((string) ($_POST['name'] ?? '')) ?>" required>
+                                </div>
+                            </label>
+                        <?php endif; ?>
 
-                    <?php if ($mode === 'register'): ?>
                         <label class="block">
-                            <span class="mb-1.5 block text-xs font-black">Confirm password</span>
+                            <span class="mb-1 block text-xs font-black">Email address</span>
                             <div class="relative">
-                                <i data-lucide="check" class="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400"></i>
-                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white pl-10 focus:border-slate-950 focus:outline-none" type="password" name="password_confirmation" autocomplete="new-password" minlength="10" maxlength="72" required>
+                                <i data-lucide="mail" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
+                                <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" type="email" name="email" autocomplete="email" maxlength="160" value="<?= htmlspecialchars((string) ($_POST['email'] ?? '')) ?>" required>
                             </div>
                         </label>
-                    <?php endif; ?>
 
-                    <button class="btn btn-lg w-full border-0 bg-slate-950 text-white hover:bg-rose-600" type="submit">
-                        <?= $mode === 'register' ? 'Create account' : 'Sign in' ?>
-                        <i data-lucide="arrow-right" class="h-4 w-4"></i>
-                    </button>
-                </form>
+                        <label class="block">
+                            <span class="mb-1 block text-xs font-black">Password</span>
+                            <div class="relative">
+                                <i data-lucide="lock-keyhole" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
+                                <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" type="password" name="password" autocomplete="<?= $mode === 'register' ? 'new-password' : 'current-password' ?>" minlength="10" maxlength="72" required>
+                            </div>
+                        </label>
 
-                <p class="mt-6 text-center text-xs text-slate-500">
-                    <?= $mode === 'register' ? 'Already registered?' : 'New to EcoCart?' ?>
-                    <a class="font-black text-rose-600 hover:underline" href="login.php?mode=<?= $mode === 'register' ? 'login' : 'register' ?>&amp;next=<?= rawurlencode($next) ?>">
-                        <?= $mode === 'register' ? 'Sign in' : 'Create an account' ?>
-                    </a>
-                </p>
+                        <?php if ($mode === 'register'): ?>
+                            <label class="block">
+                                <span class="mb-1 block text-xs font-black">Confirm password</span>
+                                <div class="relative">
+                                    <i data-lucide="check" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-400"></i>
+                                    <input class="input input-bordered h-10 min-h-10 w-full rounded-lg border-slate-300 bg-white pl-10 text-sm focus:border-slate-950 focus:outline-none" type="password" name="password_confirmation" autocomplete="new-password" minlength="10" maxlength="72" required>
+                                </div>
+                            </label>
+                        <?php endif; ?>
+
+                        <button class="btn mt-5 min-h-12 w-full border-0 bg-slate-950 text-white hover:bg-rose-600" type="submit">
+                            <?= $mode === 'register' ? 'Create account' : 'Sign in' ?>
+                            <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                        </button>
+                    </form>
+
+                    <p class="mt-5 text-center text-xs text-slate-500">
+                        <?= $mode === 'register' ? 'Already registered?' : 'New to EcoCart?' ?>
+                        <a class="font-black text-rose-600 hover:underline" href="login.php?mode=<?= $mode === 'register' ? 'login' : 'register' ?>&amp;next=<?= rawurlencode($next) ?>">
+                            <?= $mode === 'register' ? 'Sign in' : 'Create an account' ?>
+                        </a>
+                    </p>
+                </div>
             </div>
 
             <footer class="text-xs text-slate-400">&copy; <?= date('Y') ?> EcoCart</footer>
@@ -172,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <section class="relative hidden min-h-screen overflow-hidden bg-slate-950 lg:block" aria-label="EcoCart sale collection">
             <img class="absolute inset-0 h-full w-full object-cover" src="assets/images/ecocart-share.png" alt="EcoCart sale collection">
             <div class="absolute inset-0 bg-slate-950/18"></div>
-            <div class="absolute bottom-10 left-10 max-w-md bg-white p-6 shadow-2xl">
+            <div class="absolute bottom-10 left-10 max-w-md rounded-lg bg-white p-6 shadow-2xl">
                 <p class="text-xs font-black uppercase text-rose-600">Big Blowout Sale</p>
                 <p class="mt-2 text-2xl font-black">Everything practical, all in one cart.</p>
                 <p class="mt-2 text-sm leading-6 text-slate-600">School, worksite, rider, home, and family essentials at everyday prices.</p>

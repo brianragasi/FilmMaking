@@ -46,7 +46,7 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
         </div>
     </header>
 
-    <main class="app-shell py-8 sm:py-12">
+    <main class="app-shell py-6 sm:py-8">
         <?php if (isset($_GET['denied'])): ?>
             <div class="mb-5 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
                 <div class="flex items-start gap-3">
@@ -56,39 +56,55 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
             </div>
         <?php endif; ?>
 
-        <section class="grid overflow-hidden rounded-lg border border-slate-200 bg-white lg:grid-cols-[0.8fr_1.2fr]">
-            <div class="bg-slate-950 p-7 text-white sm:p-10">
-                <span class="grid h-14 w-14 place-items-center rounded-lg bg-rose-600 text-xl font-black">
-                    <?= htmlspecialchars(strtoupper(substr($firstName, 0, 1))) ?>
-                </span>
-                <p class="mt-8 text-xs font-black uppercase text-rose-400">My EcoCart</p>
-                <h1 class="mt-2 text-3xl font-black">Hi, <?= htmlspecialchars($firstName) ?>.</h1>
-                <p class="mt-3 max-w-sm text-sm leading-6 text-slate-300">Your account is ready whenever you return to the sale.</p>
-            </div>
-
-            <div class="p-7 sm:p-10">
-                <div class="flex items-center gap-3">
-                    <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-100 text-emerald-700"><i data-lucide="shield-check" class="h-5 w-5"></i></span>
+        <section class="mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+            <div class="grid bg-slate-950 text-white md:grid-cols-[1fr_280px]">
+                <div class="flex items-center gap-4 p-6 sm:p-8">
+                    <span class="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-rose-600 text-xl font-black">
+                        <?= htmlspecialchars(strtoupper(substr($firstName, 0, 1))) ?>
+                    </span>
                     <div>
-                        <h2 class="font-black">Account details</h2>
-                        <p class="text-xs text-slate-500">Signed in securely</p>
+                        <p class="text-xs font-black uppercase text-rose-400">My EcoCart</p>
+                        <h1 class="mt-1 text-3xl font-black leading-tight">Hi, <?= htmlspecialchars($firstName) ?>.</h1>
+                        <p class="mt-2 max-w-xl text-sm leading-6 text-slate-300">Your account is ready whenever you return to the sale.</p>
                     </div>
                 </div>
-
-                <dl class="mt-7 divide-y divide-slate-100 border-y border-slate-100">
-                    <div class="grid gap-1 py-4 sm:grid-cols-[150px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Name</dt><dd class="font-bold"><?= htmlspecialchars((string) $user['name']) ?></dd></div>
-                    <div class="grid gap-1 py-4 sm:grid-cols-[150px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Email</dt><dd class="break-all font-bold"><?= htmlspecialchars((string) $user['email']) ?></dd></div>
-                    <div class="grid gap-1 py-4 sm:grid-cols-[150px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Account type</dt><dd class="font-bold"><?= ($user['role'] ?? '') === 'admin' ? 'Operations administrator' : 'Customer' ?></dd></div>
-                </dl>
-
-                <div class="mt-7 flex flex-wrap gap-3">
-                    <a class="btn border-0 bg-rose-600 text-white hover:bg-rose-700" href="index.php#products"><i data-lucide="shopping-bag" class="h-4 w-4"></i> Shop products</a>
-                    <a class="btn border-slate-200 bg-white hover:border-slate-950" href="checkout.php"><i data-lucide="credit-card" class="h-4 w-4"></i> Go to checkout</a>
-                    <form method="post" action="logout.php">
-                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                        <button class="btn btn-ghost text-slate-500 hover:bg-slate-100" type="submit"><i data-lucide="log-out" class="h-4 w-4"></i> Sign out</button>
-                    </form>
+                <div class="border-t border-white/10 p-6 md:border-l md:border-t-0 sm:p-8">
+                    <p class="text-xs font-black uppercase text-slate-400">Signed in as</p>
+                    <p class="mt-2 break-all text-sm font-bold"><?= htmlspecialchars((string) $user['email']) ?></p>
+                    <p class="mt-4 inline-flex rounded-full bg-emerald-400/12 px-3 py-1 text-xs font-black uppercase text-emerald-300">
+                        <?= ($user['role'] ?? '') === 'admin' ? 'Operations admin' : 'Customer' ?>
+                    </p>
                 </div>
+            </div>
+
+            <div class="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1fr_260px]">
+                <div>
+                    <div class="flex items-center gap-3">
+                        <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-100 text-emerald-700"><i data-lucide="shield-check" class="h-5 w-5"></i></span>
+                        <div>
+                            <h2 class="font-black">Account details</h2>
+                            <p class="text-xs text-slate-500">Saved for checkout</p>
+                        </div>
+                    </div>
+
+                    <dl class="mt-5 divide-y divide-slate-100 border-y border-slate-100">
+                        <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Name</dt><dd class="font-bold"><?= htmlspecialchars((string) $user['name']) ?></dd></div>
+                        <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Email</dt><dd class="break-all font-bold"><?= htmlspecialchars((string) $user['email']) ?></dd></div>
+                        <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Account type</dt><dd class="font-bold"><?= ($user['role'] ?? '') === 'admin' ? 'Operations administrator' : 'Customer' ?></dd></div>
+                    </dl>
+                </div>
+
+                <aside class="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                    <h2 class="text-sm font-black">Quick actions</h2>
+                    <div class="mt-4 grid gap-2">
+                        <a class="btn min-h-10 border-0 bg-rose-600 text-white hover:bg-rose-700" href="index.php#products"><i data-lucide="shopping-bag" class="h-4 w-4"></i> Shop products</a>
+                        <a class="btn min-h-10 border-slate-200 bg-white hover:border-slate-950" href="checkout.php"><i data-lucide="credit-card" class="h-4 w-4"></i> Checkout</a>
+                        <form method="post" action="logout.php">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                            <button class="btn min-h-10 w-full border-rose-200 bg-white text-rose-700 hover:border-rose-600 hover:bg-rose-50" type="submit"><i data-lucide="log-out" class="h-4 w-4"></i> Sign out</button>
+                        </form>
+                    </div>
+                </aside>
             </div>
         </section>
     </main>
