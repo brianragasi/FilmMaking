@@ -108,7 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Complete your EcoCart Big Blowout Sale order.">
     <title>Secure Checkout | EcoCart</title>
-    <link href="public/output.css" rel="stylesheet">
+    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>

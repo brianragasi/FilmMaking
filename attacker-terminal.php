@@ -14,7 +14,7 @@ if ($targetHost === '' || $targetHost === null) {
     <meta name="description" content="EcoCart traffic control console.">
     <meta name="theme-color" content="#03070c">
     <title>EcoCart Traffic Control</title>
-    <link href="public/output.css" rel="stylesheet">
+    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="assets/traffic-control-icon.svg">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>

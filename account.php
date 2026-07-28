@@ -15,7 +15,7 @@ $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['nam
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="Manage your EcoCart account.">
     <title>My Account | EcoCart</title>
-    <link href="public/output.css" rel="stylesheet">
+    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>

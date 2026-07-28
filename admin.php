@@ -42,7 +42,7 @@ $customerImpact = [
     <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="EcoCart production operations center.">
     <title>EcoCart Operations | Production</title>
-    <link href="public/output.css" rel="stylesheet">
+    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>

@@ -44,7 +44,7 @@ $storyPicks = array_slice($products, 0, 6);
     <meta name="twitter:image" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
     <meta name="twitter:image:alt" content="EcoCart sale collection with school, worksite, rider, home, and family essentials">
     <title>EcoCart | Big Blowout Sale</title>
-    <link href="public/output.css" rel="stylesheet">
+    <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
