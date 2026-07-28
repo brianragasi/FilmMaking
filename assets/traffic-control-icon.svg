@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">EcoCart Traffic Control</title>
+  <rect width="512" height="512" rx="84" fill="#03070c"/>
+  <rect x="52" y="76" width="408" height="360" rx="36" fill="#07101a" stroke="#334155" stroke-width="12"/>
+  <circle cx="94" cy="120" r="12" fill="#f43f5e"/>
+  <circle cx="132" cy="120" r="12" fill="#fbbf24"/>
+  <circle cx="170" cy="120" r="12" fill="#34d399"/>
+  <path d="M112 218l68 54-68 54" fill="none" stroke="#fb7185" stroke-linecap="round" stroke-linejoin="round" stroke-width="28"/>
+  <path d="M214 330h178" fill="none" stroke="#67e8f9" stroke-linecap="round" stroke-width="28"/>
+  <path d="M224 226h166M224 274h120" fill="none" stroke="#475569" stroke-linecap="round" stroke-width="18"/>
+</svg>

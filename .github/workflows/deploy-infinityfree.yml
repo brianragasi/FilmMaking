@@ -1,0 +1,67 @@
+name: Deploy EcoCart to InfinityFree
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ecocart-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Build DaisyUI stylesheet
+        run: |
+          npm ci
+          npm run build:css
+
+      - name: Validate JavaScript
+        run: node --check assets/app.js
+
+      - name: Deploy runtime files over FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ftpupload.net
+          username: ${{ secrets.INFINITYFREE_FTP_USERNAME }}
+          password: ${{ secrets.INFINITYFREE_FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./
+          server-dir: /htdocs/
+          timeout: 120000
+          log-level: standard
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            **/node_modules/**
+            **/tmp/**
+            **/*.log
+            **/*.md
+            **/*.pdf
+            **/package.json
+            **/package-lock.json
+            **/assets/app.css
+            **/database/**
+            **/story.txt
+            **/includes/config.local.php
+

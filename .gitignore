@@ -1,0 +1,14 @@
+# Local dependencies and generated working files
+node_modules/
+tmp/
+*.log
+
+# Local database credentials must never be committed
+includes/config.local.php
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+

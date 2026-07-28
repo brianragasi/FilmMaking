@@ -1,0 +1,536 @@
+OVERLOAD
+Written By
+Section 3
+An Eight-Minute DDoS Awareness Screenplay
+Cast of Characters
+SARAH – A practical and determined student who waits for the
+EcoCart sale with her classmates. She becomes one of the
+many legitimate customers affected when the website suddenly
+stops working.
+SELLER / ECOCART OWNER – The person responsible for the
+business and its online store. Concerned about the failed
+sale, the seller later calls an incident meeting to
+understand what happened and how the company will prevent
+another attack.
+STORE MANAGER – The manager responsible for sales
+operations, employees, and customer service. Confident
+before the sale, but immediately concerned when the website
+becomes unavailable.
+SERVER ADMIN 1 – A member of EcoCart's technical team who
+monitors server performance, identifies the abnormal traffic
+spike, and helps restore the service.
+SERVER ADMIN 2 – A second technical specialist who filters
+malicious traffic, coordinates with the security provider,
+and explains the company's recovery actions.
+CYBERSECURITY ANALYST – The specialist who confirms that the
+event is a Distributed Denial-of-Service attack and explains
+the botnet, the threat, and the recommended preventive
+controls.
+INCIDENT RESPONSE LEAD – The person who coordinates the
+company's response, records the actions taken, and
+recommends a clear incident response plan for future
+emergencies.
+ATTACKER – A hidden figure who controls a group of
+compromised devices and orders them to flood the EcoCart
+server with repeated requests.
+2
+CLASSMATES / STUDENTS – Ten to twelve students who discuss
+the Big Blowout Sale, prepare their carts, and later react
+when their purchases cannot be completed.
+CONSTRUCTION WORKERS – Five to six workers resting during
+their break. They hope to buy discounted safety equipment,
+tools, and work supplies.
+PICK ME RIDER – A ride-hailing rider who plans to buy
+motorcycle accessories and rain gear before returning to
+work.
+NANAYS AND BARANGAY RESIDENTS – Six to eight neighbors who
+begin by discussing a local barangay issue, but quickly
+change the topic when the online sale starts.
+MOTHER AND FAMILY MEMBERS – A mother caring for an infant,
+supported by two relatives or friends. She hopes the sale
+will help her save money on essential baby products.
+STORE EMPLOYEES AND CUSTOMERS – Five to seven ensemble
+members who prepare orders, assist shoppers, and show the
+scale of EcoCart's expected sale activity.
+BOTNET REPRESENTATIVES – Students who visually represent
+infected phones, computers, and other devices repeatedly
+sending fake requests. These roles may be played by actors
+from earlier scenes.
+ENSEMBLE / MULTI-ROLE ACTORS:
+● Classmates: Ten to twelve students who discuss the Big
+Blowout Sale, prepare their carts, and later react when
+their purchases cannot be completed.
+● Construction Workers (wearing safety vests): Five to
+six workers resting during their break. They hope to
+buy discounted safety equipment, tools, and work
+supplies.
+● Store Employees and Customers : Five to seven ensemble
+members who prepare orders, assist shoppers, and show
+the scale of EcoCart's expected sale activity.
+● Botnet Representatives (holding red screens): Students
+who visually represent infected phones, computers, and
+other devices repeatedly sending fake requests. These
+roles may be played by actors from earlier scenes.
+● Barangay Neighbors: Six to eight neighbors who begin by
+discussing a local barangay issue, but quickly change
+the topic when the online sale starts.
+3
+● Delivery Rider: A ride-hailing rider who plans to buy
+motorcycle accessories and rain gear before returning
+to work.
+● Mother with Infant and Family (using props): A mother
+caring for an infant, supported by two relatives or
+friends. She hopes the sale will help her save money on
+essential baby products.
+Setting:
+A busy weekday at noon during EcoCart's largest online
+promotion. The story moves between a classroom, an EcoCart
+store, a construction site, a barangay waiting shed, a small
+family home, Sarah's bedroom, an unknown attacker's room,
+EcoCart's IT office, and the company conference room. The
+locations may be recorded separately and connected through
+quick cuts, split-screen shots, phone close-ups, and short
+montage sequences.
+At Rise:
+People from different parts of the community are waiting for
+the EcoCart Big Blowout Sale. Students have prepared their
+shopping carts. Workers are looking for affordable
+equipment. Parents are hoping to save money on household
+needs. Inside EcoCart, employees expect a record number of
+orders. None of them knows that an attacker is preparing to
+flood the website with malicious traffic.
+Production Note:
+The screenplay is designed for approximately thirty to forty
+students and a total video duration of about eight minutes.
+Ensemble actors may appear in more than one short scene.
+Dialogue should be delivered naturally, while transitions
+and reaction shots should remain quick to protect the
+running time.
+Budget Filming Strategy:
+● EcoCart HQ / Store: Filmed in an empty campus
+classroom or org room. Stack 8–10 plain
+cardboard boxes taped with printed "EcoCart"
+paper logos to simulate a fulfillment hub.
+● Construction Site: Shot outdoors against a
+brick/concrete campus wall. Actors wear bright
+safety vests over casual clothes.
+● Delivery Rider: Shot in the campus parking lot
+next to a parked scooter or motorcycle.
+4
+● Barangay Shed: Shot at any campus gazebo,
+outdoor bench, or covered walkway.
+● Family Home: Dorm room corner. The baby is a
+swaddled towel/blanket bundle held close to
+the actor’s chest (camera shot over the
+shoulder).
+● IT Command Center: Dimly lit campus computer
+lab or desk with laptops displaying
+code/network graphs.
+5
+CHAPTER 1 – THE BIG BLOWOUT BUZZ
+INT. CLASSROOM – DAY
+A classroom is alive with conversation before the next
+lesson. Ten to twelve CLASSMATES sit in small groups,
+comparing products on their phones and showing one another
+the items already waiting in their online carts. A bright
+advertisement fills their screens: ECOCART BIG BLOWOUT SALE
+– UP TO 70% OFF.
+STUDENT 1
+Kita namo sa sale sa EcoCart Big
+Blowout?
+STUDENT 2
+Grabe ba! 50% discount sa tanan
+STUDENT 3
+Hapit na mag start kay duol na 12
+STUDENT 4
+Nag add to cart na gani ko oh arun ditso
+na dayun check out
+STUDENT 5
+Same. Halosa school supplies akong gi
+pang add to cart
+The other classmates lift their phones and speak over one
+another, their excitement filling the room.
+CLASSMATES
+Sapatos ako! Headset akoa! Ayaw mog
+kalimot sa discount code ha! Dungan tag
+checkout!
+The school bell rings. The students settle into their seats,
+but nearly every phone remains open to the EcoCart countdown
+page.
+STUDENT 1
+Guys, pa hotspot bi nahutdan ko ug load.
+Mag sugod na. Pa connect please.
+INT. ECOCART STORE – DAY
+The EcoCart store is busy with final preparations. Employees
+organize products, check order lists, and place sale signs
+around the counter. Customers move through the aisles while
+the STORE MANAGER watches a screen displaying the rising
+number of online visitors.
+6
+STORE MANAGER
+Everyone, today is our biggest online
+sale. Make sure every order is processed
+as quickly as possible.
+EMPLOYEE 1
+Website traffic is already increasing.
+EMPLOYEE 2
+Thousands of customers are waiting for
+the sale to begin.
+STORE MANAGER
+Good. Let's make this our most
+successful sale yet.
+The employees return to their stations. On the monitor, the
+countdown continues toward twelve noon.
+7
+CHAPTER 2 – THE SALE REACHES THE COMMUNITY
+EXT. CONSTRUCTION SITE / ROADSIDE – DAY
+Five to six CONSTRUCTION WORKERS rest beside stacked
+materials during their lunch break. Their helmets and tools
+lie nearby. A PICK ME RIDER waits at the roadside, checking
+his phone before accepting another booking.
+WORKER 1
+Sa sale sa EcoCart ba, unsa inyong
+paliton? Boots ako bay para diri sa
+trabaho
+WORKER 2
+Ay oo ba naa man diay sale. Sakto guba
+na akong helmet, kana nalang akong
+paliton.
+WORKER 3
+Apil diba tools? Apili nalanv ko bi,
+bayad rako.
+The Pick Me rider turns his phone so the workers can see the
+items inside his cart.
+PICK ME RIDER
+Phone holder akoang paliton uy kay lisud
+kaayo mag sigeg tan-aw sa cellphone sa
+direction.
+WORKER 4
+Ako nimo apilan na na nimog raincoat
+PICK ME RIDER
+Mana uy, ga hulat nalang kog 12.
+A notification appears. The workers immediately reach for
+their phones.
+WORKERS
+Nagsugod na ang sale!!
+EXT. BARANGAY WAITING SHED – DAY
+Six to eight NANAYS AND BARANGAY RESIDENTS sit together
+beneath a waiting shed. Their conversation is serious at
+first, with several residents reacting strongly to the
+latest neighborhood concern.
+NANAY 1
+8
+Mare, kadungog mo atung chika sulod sa
+barangay?
+NANAY 2
+Oo uy, mao manang wala nahuman na
+drainage. Ambot ana nila.
+NANAY 3
+Adtu gani mo sa amoa diba inig gabii
+wagyud moy makita sa dalan kay ang mga
+suga wa gyud nasugdan ug taud!
+NANAY 4
+Mao bitaw na nag pa tawag ug meeting
+utro si Kapitan
+Nanay 1 glances at her phone. Her expression changes
+immediately.
+NANAY 1
+Hoy! nag sugod na ang sale!!
+NANAY 2
+Hala taysa, kalha akong paliton run
+NANAY 3
+Kurtina akoa
+NANAY 4
+Send link bi, unya nata tiwas ug marites
+aning issue daris barangay
+The residents crowd around the phone. Their discussion
+shifts completely from barangay concerns to discounts and
+shopping carts.
+INT. SMALL HOUSE – DAY
+A MOTHER holds her infant while reviewing a handwritten list
+of expenses. Baby formula, diapers, medicine, and clothing
+are written beside carefully calculated prices. Two FAMILY
+MEMBERS sit beside her.
+MOTHER
+Baby formula, diapers, clothes, and
+medicine. Gaka mahal naman tanan
+palitonon uy.
+FAMILY MEMBER 1
+Hon, naa ra bay sale karun ang EcoCart.
+Tanan 50%.
+MOTHER
+9
+Diay? Maypa.
+She opens the EcoCart website and begins adding essential
+items to her cart.
+FAMILY MEMBER 2
+Only buy what the baby needs.
+MOTHER
+Yes, Hon. I'll use the money I save for
+the baby's checkup.
+She adds diapers, baby clothes, and feeding bottles, then
+watches the countdown approach zero.
+MOTHER
+I'm ready. I just need to check out.
+10
+CHAPTER 3 – THE WEBSITE GOES DOWN
+INT. SARAH'S BEDROOM – DAY
+SARAH sits in front of her laptop with the EcoCart website
+open. Several classmates appear through a group video call,
+while others may be shown in separate split-screen shots.
+The countdown reaches its final seconds.
+WEBSITE COUNTDOWN
+Three... two... one...
+SARAH
+The sale is live!
+Everyone begins clicking. Product pages open, carts update,
+and checkout buttons flash across different screens.
+CLASSMATE 1
+Nakuha nako ang sapatos! YES!
+CLASSMATE 2
+Loading pa akoa do.
+SARAH
+Check out nako.
+Sarah clicks CHECKOUT. The page freezes. The loading icon
+spins without stopping.
+SARAH
+Hala! di lagi?
+She refreshes the page. A message fills the screen: SERVER
+ERROR. PLEASE TRY AGAIN.
+CLASSMATE 3
+Akoa pud.
+CLASSMATE 4
+Down ang website do!
+INT. UNKNOWN ROOM – DAY
+In a dark room, the ATTACKER sits before several screens.
+Around the attacker, BOTNET REPRESENTATIVES hold phones,
+laptops, and signs labeled REQUEST, REFRESH, CONNECT, and
+LOAD PAGE. Their repeated movements begin slowly, then
+become faster.
+ATTACKER
+Let's see how their server handles this.
+11
+The attacker presses a key. The botnet representatives
+repeatedly raise their devices and signs. On-screen graphics
+show thousands of connections moving toward one EcoCart
+server.
+NARRATOR (V.O.)
+Thousands of fake requests are sent to
+EcoCart at the same time. The website
+becomes overwhelmed and can no longer
+respond to legitimate customers.
+12
+CHAPTER 4 – INCIDENT RESPONSE AND RECOVERY
+INT. ECOCART IT OFFICE – DAY
+Warning messages appear across the technical team's
+monitors. One graph rises sharply beyond its normal range.
+SERVER ADMIN 1 and SERVER ADMIN 2 compare traffic logs while
+the STORE MANAGER waits behind them.
+SERVER ADMIN 1
+Website traffic has increased far beyond
+normal levels.
+SERVER ADMIN 2
+Oo. Kadaghanan sa requests gikan sa
+suspicious ug balik-balik nga sources.
+STORE MANAGER
+Are customer accounts being stolen?
+SERVER ADMIN 1
+Sa karon, wala pa mi nakita nga naay
+na-steal nga customer accounts. Murag
+Distributed Denial-of-Service (DDoS)
+attack ni.
+STORE MANAGER
+What does that mean?
+SERVER ADMIN 2
+Basically sir, gi-flood sa attacker ang
+website ug fake traffic. Ang server nato
+sige ug process ana nga fake requests,
+mao nga dili na ka-access ang atong
+legitimate customers.
+STORE MANAGER
+How do we stop it?
+SERVER ADMIN 1
+Activate rate limiting. Reduce repeated
+requests and block the most suspicious
+sources.
+SERVER ADMIN 2
+I'll contact our security provider. They
+can redirect the traffic through a
+scrubbing service before it reaches our
+server.
+13
+The server administrators begin working. New filters appear
+on the screen as suspicious connections are separated from
+legitimate customer traffic.
+SERVER ADMIN 1
+Rate limiting is active.
+SERVER ADMIN 2
+Malicious traffic is being filtered and
+blocked.
+STORE MANAGER
+Keep monitoring the system. We need to
+restore the website safely.
+CUSTOMER IMPACT MONTAGE – VARIOUS LOCATIONS
+Quick cuts return to the groups waiting across the
+community. Each customer sees the same loading screen or
+server error.
+STUDENT 2
+Wala na ‘di na ko ka order.
+WORKER 1
+Naa pa sa cart akong boots.
+PICK ME RIDER
+Lakaw na lang sa ko kay naay booking.
+NANAY 2
+Na unsa mani?.
+NANAY 3
+Akong kalha ani impas gyud.
+MOTHER
+I hope the baby products do not sell
+out.
+NARRATOR (V.O.)
+The attack prevents customers from
+completing their purchases. EcoCart
+loses sales, while legitimate users
+experience delays and frustration. A
+DDoS attack mainly targets availability,
+but the company must still investigate
+carefully to confirm that no other
+systems were affected.
+INT. SARAH'S BEDROOM – LATER
+14
+Sarah opens her laptop again and presses refresh. This time,
+the EcoCart homepage appears normally. Product images load,
+the cart remains intact, and the checkout button responds.
+SARAH
+Yes naa na!
+She reviews her order and clicks CHECKOUT. A confirmation
+page appears: THANK YOU FOR YOUR PURCHASE!
+SARAH
+Finally!
+Her classmates celebrate as their orders also go through. A
+final notification appears on their screens: ECOCART
+SERVICES HAVE BEEN RESTORED. THANK YOU FOR YOUR PATIENCE.
+15
+CHAPTER 5 – THE ECOCART INCIDENT MEETING
+INT. ECOCART CONFERENCE ROOM – DAY
+The following morning, the SELLER, STORE MANAGER, SERVER
+ADMINISTRATORS, CYBERSECURITY ANALYST, and INCIDENT RESPONSE
+LEAD sit around a conference table. A screen behind them
+displays: ECOCART DDoS INCIDENT REPORT.
+SELLER
+Yesterday was supposed to be our biggest
+sale. Instead, our website suddenly
+became unavailable. What exactly
+happened?
+SERVER ADMIN 1
+Our server received an unusually large
+number of requests within a very short
+period.
+The screen displays a graph showing normal traffic followed
+by a sudden and extreme spike.
+SELLER
+Was all of that traffic caused by real
+customers joining the sale?
+SERVER ADMIN 2
+Naay uban nga requests gikan sa tinuod nga customers, pero
+kadaghanan gikan sa libo-libong compromised devices nga
+gi-control sa attacker.
+attacker.
+CYBERSECURITY ANALYST
+This was a Distributed
+Denial-of-Service, or DDoS, attack. The
+attacker used a botnet to repeatedly
+send fake requests to the EcoCart
+website.
+A simple diagram appears: many infected devices point toward
+one overloaded EcoCart server, while legitimate customers
+remain outside the connection.
+STORE MANAGER
+So the large amount of fake traffic
+caused the website to stop responding?
+16
+SERVER ADMIN 1
+Yes sir. Na-consume sa fake traffic ang
+available resources sa server, mao nga
+dili na siya maka-respond ug tarong sa
+legitimate users.
+SELLER
+What did the team do after the attack
+was detected?
+INCIDENT RESPONSE LEAD
+First, we confirmed the abnormal traffic
+and recorded the affected systems. We
+activated rate limiting, blocked
+repeated suspicious requests, and
+protected the checkout service from
+further overload.
+SERVER ADMIN 2
+Gi-redirect pud namo ang incoming
+traffic ngadto sa atong security
+provider. Ang ilang scrubbing service
+mao ang nag-separate sa malicious
+requests ug legitimate customer traffic
+before ipadala balik ang clean traffic
+sa atong server.
+SELLER
+Was any customer information stolen?
+CYBERSECURITY ANALYST
+Based on our investigation, wala mi
+nakita nga evidence nga na-access ang
+customer accounts o payment information.
+Ang biggest impact kay na-disrupt lang
+ang service. Padayon gihapon mi ug
+review sa logs para masiguro nga wala'y
+lain related activity nga na-miss.
+STORE MANAGER
+What will we do to prevent this from
+happening during the next sale?
+CYBERSECURITY ANALYST
+We will strengthen DDoS protection,
+improve real-time traffic monitoring,
+configure automatic rate limiting, and
+use filtering rules that block
+suspicious requests before they reach
+the main server.
+17
+SERVER ADMIN 1
+We will place critical services behind a
+content delivery network and prepare
+safe failover systems. We will also test
+our capacity before every major sale.
+INCIDENT RESPONSE LEAD
+The company will maintain an updated
+incident response plan. Each team member
+will know who detects the threat, who
+communicates with customers, who
+contacts the provider, and who approves
+system recovery.
+SELLER
+Then our priorities are clear: prepare
+before the event, detect unusual traffic
+early, respond quickly, restore services
+safely, and improve our defenses after
+every incident.
+Everyone around the table nods. The screen changes from the
+incident graph to a short mitigation plan.
+STORE MANAGER
+We need to protect both the business and
+our customers, especially during
+high-traffic events.
+SELLER
+Agreed. Apply these improvements before
+our next online sale.
+The screen displays: MONITOR UNUSUAL TRAFFIC. APPLY RATE
+LIMITING. FILTER MALICIOUS REQUESTS. USE A DDoS PROTECTION
+PROVIDER. PREPARE FAILOVER SYSTEMS. MAINTAIN AN INCIDENT
+RESPONSE PLAN.
+NARRATOR (V.O.)
+Effective threat mitigation requires
+preparation, early detection,
+coordinated response, safe recovery, and
+continuous improvement.
+The EcoCart logo appears with the message: STAY SECURE. KEEP
+THE TRAFFIC FLOWING.
+The image fades to black. Closing credits begin, allowing
+the remaining ensemble members to be recognized.
+— THE END —

@@ -1,0 +1,17 @@
+{
+  "name": "ecommerce",
+  "version": "1.0.0",
+  "description": "EcoCart is a PHP, MySQL, XAMPP, HTML, JavaScript, and DaisyUI demo system for the DDoS awareness screenplay.",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "npx @tailwindcss/cli -i assets/app.css -o public/output.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "daisyui": "^5.7.4",
+    "tailwindcss": "^4.3.3"
+  }
+}
