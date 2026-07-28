@@ -39,6 +39,27 @@ jobs:
           node --check assets/app-public.js
           node --check assets/app.js
 
+      - name: Create production database config
+        env:
+          DB_HOST: ${{ secrets.GOOGIEHOST_DB_HOST }}
+          DB_NAME: ${{ secrets.GOOGIEHOST_DB_NAME }}
+          DB_USER: ${{ secrets.GOOGIEHOST_DB_USER }}
+          DB_PASSWORD: ${{ secrets.GOOGIEHOST_DB_PASSWORD }}
+        run: |
+          test -n "$DB_HOST"
+          test -n "$DB_NAME"
+          test -n "$DB_USER"
+          test -n "$DB_PASSWORD"
+          php -r '
+          $config = [
+              "host" => getenv("DB_HOST"),
+              "name" => getenv("DB_NAME"),
+              "user" => getenv("DB_USER"),
+              "pass" => getenv("DB_PASSWORD"),
+          ];
+          file_put_contents("includes/config.local.php", "<?php\nreturn " . var_export($config, true) . ";\n");
+          '
+
       - name: Deploy runtime files over FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
         with:
@@ -76,4 +97,3 @@ jobs:
             **/index.html
             **/main.js
             **/preload.js
-            **/includes/config.local.php
