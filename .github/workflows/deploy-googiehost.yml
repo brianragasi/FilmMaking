@@ -45,6 +45,8 @@ jobs:
           DB_NAME: ${{ secrets.GOOGIEHOST_DB_NAME }}
           DB_USER: ${{ secrets.GOOGIEHOST_DB_USER }}
           DB_PASSWORD: ${{ secrets.GOOGIEHOST_DB_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.GOOGIEHOST_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.GOOGIEHOST_ADMIN_PASSWORD }}
         run: |
           test -n "$DB_HOST"
           test -n "$DB_NAME"
@@ -57,6 +59,10 @@ jobs:
               "user" => getenv("DB_USER"),
               "pass" => getenv("DB_PASSWORD"),
           ];
+          if (getenv("ADMIN_EMAIL") && getenv("ADMIN_PASSWORD")) {
+              $config["admin_email"] = strtolower(trim(getenv("ADMIN_EMAIL")));
+              $config["admin_password_hash"] = password_hash(getenv("ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+          }
           file_put_contents("includes/config.local.php", "<?php\nreturn " . var_export($config, true) . ";\n");
           '
 

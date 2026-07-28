@@ -9,8 +9,7 @@ function start_ecocart_session(): void
         return;
     }
 
-    $forwardedProto = strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
-    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $forwardedProto === 'https';
+    $isSecure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 
     session_name('ecocart_session');
     session_set_cookie_params([
@@ -88,6 +87,43 @@ function csrf_is_valid(?string $token): bool
         && hash_equals((string) $_SESSION['csrf_token'], $token);
 }
 
+function configured_admin(): ?array
+{
+    static $admin = null;
+    static $loaded = false;
+
+    if ($loaded) {
+        return $admin;
+    }
+
+    $loaded = true;
+    $localConfigPath = __DIR__ . '/config.local.php';
+    if (!is_file($localConfigPath)) {
+        return null;
+    }
+
+    $loadedConfig = require $localConfigPath;
+    if (!is_array($loadedConfig)) {
+        return null;
+    }
+
+    $email = strtolower(trim((string) ($loadedConfig['admin_email'] ?? '')));
+    $passwordHash = (string) ($loadedConfig['admin_password_hash'] ?? '');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $passwordHash === '') {
+        return null;
+    }
+
+    $admin = [
+        'id' => 1,
+        'name' => 'EcoCart Admin',
+        'email' => $email,
+        'password_hash' => $passwordHash,
+        'role' => 'admin',
+    ];
+
+    return $admin;
+}
+
 function current_user(): ?array
 {
     $user = $_SESSION['user'] ?? null;
@@ -132,46 +168,53 @@ function sign_in_user(array $user): void
 
 function attempt_login(string $email, string $password): bool
 {
-    if (!login_attempt_allowed() || !auth_schema_ready()) {
+    if (!login_attempt_allowed()) {
         return false;
     }
 
+    $normalizedEmail = strtolower(trim($email));
     $pdo = db();
-    if (!$pdo) {
-        return false;
+    $schemaReady = $pdo instanceof PDO && auth_schema_ready();
+
+    if ($schemaReady) {
+        try {
+            $statement = $pdo->prepare(
+                'SELECT id, name, email, password_hash, role
+                 FROM users
+                 WHERE email = :email
+                 LIMIT 1'
+            );
+            $statement->execute(['email' => $normalizedEmail]);
+            $user = $statement->fetch();
+
+            if ($user && password_verify($password, (string) $user['password_hash'])) {
+                if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
+                    $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
+                    $rehash->execute([
+                        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                        'id' => (int) $user['id'],
+                    ]);
+                }
+
+                $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
+                $update->execute(['id' => (int) $user['id']]);
+                sign_in_user($user);
+                return true;
+            }
+        } catch (Throwable $error) {
+            // Fall through to the configured admin account if database login is unavailable.
+        }
     }
 
-    try {
-        $statement = $pdo->prepare(
-            'SELECT id, name, email, password_hash, role
-             FROM users
-             WHERE email = :email
-             LIMIT 1'
-        );
-        $statement->execute(['email' => strtolower(trim($email))]);
-        $user = $statement->fetch();
-
-        if (!$user || !password_verify($password, (string) $user['password_hash'])) {
-            record_failed_login();
-            usleep(random_int(150000, 300000));
-            return false;
-        }
-
-        if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
-            $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
-            $rehash->execute([
-                'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                'id' => (int) $user['id'],
-            ]);
-        }
-
-        $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
-        $update->execute(['id' => (int) $user['id']]);
-        sign_in_user($user);
+    $admin = configured_admin();
+    if ($admin && hash_equals($admin['email'], $normalizedEmail) && password_verify($password, (string) $admin['password_hash'])) {
+        sign_in_user($admin);
         return true;
-    } catch (Throwable $error) {
-        return false;
     }
+
+    record_failed_login();
+    usleep(random_int(150000, 300000));
+    return false;
 }
 
 function register_customer(string $name, string $email, string $password): array
