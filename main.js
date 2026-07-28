@@ -19,7 +19,8 @@ function createWindow() {
     // flash before the page paints.
     backgroundColor: '#03070c',
     autoHideMenuBar: true,
-    title: 'EcoCart Traffic Control',
+    title: 'SWARMGRID C2',
+    icon: path.join(__dirname, 'assets', 'images', 'swarmgrid-c2-icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       // Security defaults: the renderer stays a plain web page with no Node access,

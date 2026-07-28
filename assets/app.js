@@ -704,9 +704,9 @@ function bootTerminal() {
     serviceSummary.className = 'rounded bg-rose-400/15 px-2 py-1 text-[10px] font-black uppercase text-rose-300';
     setImpact('Waiting', 'text-rose-400', '30 affected');
     sourceCount.textContent = 'Repeated activity detected';
-    line('Request volume: 68,420/min (29x above the 2,340 baseline)', 'error');
-    line('Checkout queue: 1,842 waiting | response time: 8.9 seconds', 'warn');
-    line('Pattern match: REQUEST / REFRESH / CONNECT / LOAD PAGE repeating across 4 source groups', 'warn');
+    line('[x] request volume 68,420/min | 29x over baseline | anomaly score 0.98', 'error');
+    line('[!] checkout queue depth 1,842 | p95 8.9s | worker starvation', 'warn');
+    line('[!] signature match: REQUEST/REFRESH/CONNECT/LOAD_PAGE x4 clusters | bot heuristics tripped', 'warn');
     setStepState('inspect', 'ready');
     drawBars('attack');
     primeCinematicInput();
@@ -757,19 +757,19 @@ function bootTerminal() {
     startButton.disabled = true;
     startButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Trace active';
     command('edgectl monitor --live --routes /products,/cart,/checkout');
-    line('Live monitor attached to storefront, cart, and checkout', 'ok');
-    line('Traffic baseline recorded: 2,340 requests/min', 'info');
+    line('[+] edge telemetry stream attached → /products /cart /checkout', 'ok');
+    line('[*] baseline locked: 2,340 req/min | p95 184ms | err 0.18%', 'info');
     setIncidentVisual('warning', 'Watching live traffic', 'Monitoring', 'Traffic will be compared with the normal sale-event level.');
     drawBars('healthy');
     primeCinematicInput();
     const trafficRamp = [
-      { requests: 3200, errors: '0.24%', latency: '202 ms', checkout: 'Online', saturation: '23%', note: 'Traffic: 3,200 requests/min' },
-      { requests: 4900, errors: '0.48%', latency: '248 ms', checkout: 'Online', saturation: '31%', note: 'Traffic: 4,900 requests/min' },
-      { requests: 7400, errors: '1.2%', latency: '390 ms', checkout: 'Slowing', saturation: '42%', note: 'Traffic: 7,400 requests/min - above the usual sale level' },
-      { requests: 12800, errors: '3.8%', latency: '820 ms', checkout: 'Slowing', saturation: '56%', note: 'Warning: checkout is beginning to slow down' },
-      { requests: 24100, errors: '9.6%', latency: '2.1 s', checkout: 'Degraded', saturation: '71%', note: 'Traffic: 24,100 requests/min - repeated activity increasing' },
-      { requests: 43800, errors: '19.4%', latency: '4.8 s', checkout: 'Degraded', saturation: '84%', note: 'Critical: customers are now waiting for checkout' },
-      { requests: 68420, errors: '31.7%', latency: '8.9 s', checkout: 'Timing out', saturation: '96%', note: 'Critical: traffic reached 68,420 requests/min' },
+      { requests: 3200, errors: '0.24%', latency: '202 ms', checkout: 'Online', saturation: '23%', note: '>> ingress 3,200 req/min | conn/s climbing' },
+      { requests: 4900, errors: '0.48%', latency: '248 ms', checkout: 'Online', saturation: '31%', note: '>> ingress 4,900 req/min | keep-alive pool filling' },
+      { requests: 7400, errors: '1.2%', latency: '390 ms', checkout: 'Slowing', saturation: '42%', note: '>> ingress 7,400 req/min | above sale envelope | SYN backlog rising' },
+      { requests: 12800, errors: '3.8%', latency: '820 ms', checkout: 'Slowing', saturation: '56%', note: '[!] p95 latency breach | checkout worker queue saturating' },
+      { requests: 24100, errors: '9.6%', latency: '2.1 s', checkout: 'Degraded', saturation: '71%', note: '[!] ingress 24,100 req/min | anomalous request signature repeating' },
+      { requests: 43800, errors: '19.4%', latency: '4.8 s', checkout: 'Degraded', saturation: '84%', note: '[!] checkout thread pool exhausted | 503s emitting' },
+      { requests: 68420, errors: '31.7%', latency: '8.9 s', checkout: 'Timing out', saturation: '96%', note: '[x] ingress 68,420 req/min | origin saturation 96% | L7 flood confirmed' },
     ];
     let rampPosition = 0;
     clearInterval(incidentTimer);
@@ -824,7 +824,7 @@ function bootTerminal() {
       verify: 'scrubbed',
     };
     if (stage !== expected[name]) {
-      line('Finish the current check before continuing.', 'warn');
+      line('[!] pipeline busy → await current stage completion', 'warn');
       return;
     }
 
@@ -840,9 +840,9 @@ function bootTerminal() {
         node.className = 'rounded bg-amber-400/15 px-2 py-1 text-[9px] font-black uppercase text-amber-300';
       });
       sourceCount.textContent = '4 repeating clusters';
-      line('Repeated pattern found across 4 source groups', 'warn');
-      line('Checkout repeats: 18,422 | cart repeats: 16,108 | product repeats: 14,977', 'warn');
-      line('Automated repetition: 82.4% | legitimate customer traffic still present', 'info');
+      line('[!] repetition signature isolated across 4 source ASNs', 'warn');
+      line('[*] /checkout x18,422 | /cart x16,108 | /products x14,977 hits', 'warn');
+      line('[*] automation ratio 82.4% | residual human traffic in stream', 'info');
       stage = 'inspected';
       markComplete('inspect', 'classify');
       primeCinematicInput();
@@ -851,13 +851,13 @@ function bootTerminal() {
     if (name === 'classify') {
       command('auditctl verify --scope accounts,orders');
       await new Promise((resolve) => setTimeout(resolve, 900));
-      breachStatus.textContent = 'No account breach detected';
+      breachStatus.textContent = '0 auth anomalies';
       breachStatus.className = 'text-[10px] font-bold text-emerald-400';
-      securityFinding.textContent = 'The attack is blocking access to the website. Customer accounts and existing orders show no signs of unauthorized changes.';
+      securityFinding.textContent = 'Vector=availability (L7 volumetric). Auth store and order ledger show no unauthorized writes or session-hijack indicators.';
       setIncidentVisual('danger', 'Availability attack confirmed', 'Critical', 'The website is being overwhelmed, but customer accounts and orders remain safe.');
-      line('Account access check: clean', 'ok');
-      line('Order integrity check: unchanged', 'ok');
-      line('Incident classification: DDoS availability attack', 'error');
+      line('[+] auth store audit → 0 anomalous sessions | tokens intact', 'ok');
+      line('[+] order ledger checksum verified → no unauthorized writes', 'ok');
+      line('[x] classification: volumetric L7 DDoS | vector=availability', 'error');
       stage = 'classified';
       markComplete('classify', 'limit');
       primeCinematicInput();
@@ -884,8 +884,8 @@ function bootTerminal() {
       setServiceState(['app', 'checkout'], 'service-warning');
       serviceSummary.textContent = 'Filtering';
       serviceSummary.className = 'rounded bg-cyan-400/15 px-2 py-1 text-[10px] font-black uppercase text-cyan-300';
-      line('Rate limit active across all website entry points', 'ok');
-      line('Repeated sources limited to 40 requests every 10 seconds', 'info');
+      line('[+] token-bucket limiter armed on all ingress edges', 'ok');
+      line('[*] repeat offenders throttled → 40 req / 10s | 429 issuing', 'info');
       markComplete('limit', 'scrub');
       drawBars('filtering');
       primeCinematicInput();
@@ -914,9 +914,9 @@ function bootTerminal() {
       clearServiceStates();
       setServiceState(['waf'], 'service-filtering');
       setServiceState(['checkout'], 'service-warning');
-      line('DDoS filtering route: active', 'ok');
-      line('Suspicious traffic blocked: 57,600/min | clean traffic forwarded: 4,200/min', 'ok');
-      line('Checkout queue reduced: 1,842 -> 126', 'info');
+      line('[+] WAF scrubbing route engaged | mode=block | ddos ruleset live', 'ok');
+      line('[*] malicious dropped 57,600/min | clean forwarded 4,200/min', 'ok');
+      line('[*] checkout queue depth 1,842 → 126 | worker pool recovering', 'info');
       setImpact('Retrying', 'text-amber-400', '12 retrying');
       markComplete('scrub', 'verify');
       clearInterval(telemetryTimer);
@@ -967,10 +967,10 @@ function bootTerminal() {
       serviceSummary.className = 'rounded bg-emerald-400/15 px-2 py-1 text-[10px] font-black uppercase text-emerald-300';
       setImpact('Restored', 'text-emerald-400', '0 affected');
       setIncidentVisual('healthy', 'Production services restored', 'Resolved', 'Website, saved carts, and checkout tests have passed.');
-      line('Storefront: HTTP 200 | 142 ms | passed', 'ok');
-      line('Cart session: preserved | items unchanged', 'ok');
-      line('Checkout: HTTP 201 | 196 ms | order accepted', 'ok');
-      line('Incident resolved; monitoring will continue for 30 minutes', 'ok');
+      line('[+] GET /products → HTTP 200 | 142ms | synthetic probe passed', 'ok');
+      line('[+] session store intact | cart payloads persisted', 'ok');
+      line('[+] POST /checkout → HTTP 201 | 196ms | order committed', 'ok');
+      line('[+] incident closed | mitigation persistent | watch window 30m', 'ok');
       markComplete('verify');
       drawBars('healthy');
       startButton.innerHTML = '<i data-lucide="check-circle-2" class="h-4 w-4"></i> Incident resolved';
@@ -995,10 +995,10 @@ function bootTerminal() {
     setSystemState('healthy');
     terminal.innerHTML = '';
     command('systemctl status ecocart.target');
-    line('Website: ready', 'ok');
-    line('Cart: ready', 'ok');
-    line('Checkout: ready', 'ok');
-    line('Traffic: 2,340 requests/min', 'info');
+    line('[+] ecocart.web.service → active (running)', 'ok');
+    line('[+] ecocart.cart.service → active (running)', 'ok');
+    line('[+] ecocart.checkout.service → active (running)', 'ok');
+    line('[*] ingress 2,340 req/min | p95 184ms | err 0.18% | nominal', 'info');
     setMetrics();
     routes.products.textContent = '742 rpm';
     routes.cart.textContent = '316 rpm';
@@ -1017,9 +1017,9 @@ function bootTerminal() {
       node.className = 'rounded bg-slate-800 px-2 py-1 text-[9px] font-black uppercase text-slate-500';
     });
     sourceCount.textContent = 'Awaiting trace';
-    breachStatus.textContent = 'Pending analysis';
+    breachStatus.textContent = 'Standby';
     breachStatus.className = 'text-[10px] font-bold text-slate-500';
-    securityFinding.textContent = 'No evidence has been collected for the current trace.';
+    securityFinding.textContent = 'No packet capture staged for the current trace window.';
     checkoutDot.classList.remove('danger', 'warning');
     clearServiceStates();
     serviceSummary.textContent = 'Healthy';
@@ -1351,9 +1351,9 @@ function bootAttackerConsole() {
     targetDot.className = 'h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]';
     targetState.textContent = 'Target selected';
     targetState.className = 'font-mono text-[9px] font-black uppercase text-rose-400';
-    line(`Target locked: ecocart.ecommerce @ ${targetHost}`, 'warn');
-    line('Recon: 3 routes mapped | /products /cart /checkout', 'info');
-    line('Session ID: TC-48 | handshake OK', 'info');
+    line(`Target vector locked: ecocart.ecommerce [${targetHost}]`, 'warn');
+    line('[*] DNS resolved | ASN mapped | 3 endpoints fingerprinted: /products /cart /checkout', 'info');
+    line('[*] recon done | WAF: none | TLS 1.2 | :443 open | origin IP exposed', 'info');
     primeInput();
   }
 
@@ -1365,10 +1365,10 @@ function bootAttackerConsole() {
     deviceNode.textContent = '48';
     liveDot.className = 'h-2.5 w-2.5 rounded-full bg-cyan-400';
     setNodes('ready');
-    line('Node pool attached: 48/48 online | target ecocart', 'ok');
-    line('Cluster REQUEST: 12 nodes | Cluster REFRESH: 9 nodes', 'info');
-    line('Cluster CONNECT: 15 nodes | Cluster LOAD PAGE: 12 nodes', 'info');
-    line('All nodes armed | awaiting flood command', 'ok');
+    line('Botnet handshake OK | 48/48 zombies beaconing | IPs spoofed', 'ok');
+    line('[*] vector REQUEST: 12 sockets | REFRESH: 9 sockets | keep-alive pinned', 'info');
+    line('[*] vector CONNECT: 15 sockets | LOAD PAGE: 12 sockets | TTL randomized', 'info');
+    line('Payload staged | SYN cannons armed | awaiting fire command', 'ok');
     primeInput();
   }
 
@@ -1381,8 +1381,8 @@ function bootAttackerConsole() {
     setNodes('active');
     document.body.classList.add('attacker-running');
     localStorage.setItem('ecocart_system_state', 'attack');
-    line('Flood initiated: ecocart | /products /cart /checkout', 'error');
-    line('48 nodes issuing repeat requests | ramp mode active', 'warn');
+    line('[!] L7 flood engaged | GET storm on /products /cart /checkout', 'error');
+    line('[!] 48 zombies spraying packets | X-Forwarded-For rotating | pps climbing', 'warn');
 
     const ramp = [2400, 4200, 7100, 12800, 24600, 43800, 68400];
     let position = 0;
@@ -1395,12 +1395,12 @@ function bootAttackerConsole() {
       rejected += Math.round(batch * 0.08);
       drawAttackerBars(Math.round((requestRate / 68400) * 100));
       updateCounters();
-      line(`Outbound: ${requestRate.toLocaleString()} req/min`, requestRate < 10000 ? 'info' : requestRate < 40000 ? 'warn' : 'error');
+      line(`>> TX flood: ${requestRate.toLocaleString()} req/min | pps rising`, requestRate < 10000 ? 'info' : requestRate < 40000 ? 'warn' : 'error');
       position += 1;
       if (position >= ramp.length) {
         clearInterval(activityTimer);
         stage = 'running';
-        line('Target latency rising | legitimate sessions timing out', 'warn');
+        line('[!] origin RTT spiking | conn pool exhausted | 503 cascade | half-open flood', 'warn');
         primeInput();
       }
     }, 1100);
@@ -1411,8 +1411,8 @@ function bootAttackerConsole() {
     await new Promise((resolve) => setTimeout(resolve, 700));
     stage = 'surging';
     requestRate = 92000;
-    line('Rate override accepted: 92,000 req/min sustained', 'error');
-    line('Checkout gateway: timing out | 0 successful sessions', 'error');
+    line('[!] amplification engaged | 92,000 req/min sustained | uplink saturated', 'error');
+    line('[x] checkout gateway flatlined | TCP handshakes dropping | 0 ACK returned', 'error');
     drawAttackerBars(100);
     updateCounters();
     primeInput();
@@ -1423,7 +1423,7 @@ function bootAttackerConsole() {
     await new Promise((resolve) => setTimeout(resolve, 600));
     stage = 'holding';
     setAttackerStatus('HOLDING', 'amber');
-    line('Flood locked at 92,000 req/min | hold engaged', 'warn');
+    line('[=] flood vector locked @ 92,000 req/min | zombies holding pattern', 'warn');
     clearInterval(activityTimer);
     activityTimer = setInterval(() => {
       const filtering = localStorage.getItem('ecocart_system_state') === 'filtering';
@@ -1450,8 +1450,8 @@ function bootAttackerConsole() {
     setNodes('offline');
     drawAttackerBars(0);
     updateCounters();
-    line('Flood terminated | all routes released', 'info');
-    line('Node pool detached: 0/48 online', 'info');
+    line('[*] flood killed | sockets torn down | routes released', 'info');
+    line('[*] botnet detached | 0/48 zombies | logs purged | tracks wiped', 'info');
     primeInput();
   }
 
@@ -1525,9 +1525,10 @@ function bootAttackerConsole() {
     drawAttackerBars(0);
     updateCounters();
     command('trafficctl status');
-    line('Traffic controller online | standby', 'ok');
-    line('No target locked', 'info');
-    line('Node pool: 0/48 attached', 'info');
+    line('>> SWARMGRID C2 v2.1.7 | distributed botnet orchestrator', 'ok');
+    line('[+] C2 relay online | tor circuit established | standby', 'ok');
+    line('[*] no target vector locked', 'info');
+    line('[*] botnet pool: 0/48 sockets bound', 'info');
     primeInput();
   }
 
@@ -1563,12 +1564,12 @@ function bootAttackerConsole() {
       return;
     }
     if (event.newValue === 'filtering') {
-      line('Upstream rejecting traffic | most repeats dropped', 'error');
+      line('[!] upstream WAF retaliating | packets scrubbed at edge | RST storm inbound', 'error');
       setAttackerStatus('LIMITED', 'amber');
     }
     if (event.newValue === 'healthy') {
-      line('Target responding normally | mitigation active', 'warn');
-      line('Repeats no longer reaching ecocart | flood ineffective', 'warn');
+      line('[!] target back online | mitigation holding | rate-limit walls up', 'warn');
+      line('[x] packets blackholed | zombies filtered | flood neutralized', 'warn');
       setAttackerStatus('BLOCKED', 'rose');
     }
   });

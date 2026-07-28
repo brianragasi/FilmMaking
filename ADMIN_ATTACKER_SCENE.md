@@ -6,18 +6,19 @@ short dialogue after each console response appears.
 
 Every command below is written in real command-line style (`systemctl`,
 `edgectl`, `wafctl`, `trafficctl`, and so on) so the screens look like genuine
-operations and attack tooling on camera. The command names are cinematic
-dressing only. The console **responses** stay in plain English so the audience
-can still follow the story. These commands match exactly what appears on
-`admin.php` and the Traffic Control terminal, so treat this file as the
-on-screen script.
+operations and attack tooling on camera. Both the commands **and** the console
+responses read as technical output on screen — the audience follows the story
+through the actors' spoken dialogue, not by reading the terminal. These commands
+and readouts match exactly what appears on `admin.php` and the Traffic Control
+terminal, so treat this file as the on-screen script.
 
 ## Screens
 
 - Server admins use `admin.php` on the deployed EcoCart website.
 - The attacker opens `/traffic-control` on the same deployed website, then uses
   the full-screen icon in the top bar so the browser address bar is not visible
-  during filming.
+  during filming. The attacker tool is branded `SWARMGRID C2` on screen (a
+  fictional botnet command-and-control console), with an anonymous-mask icon.
 - Open both before the take so their state changes can stay synchronized.
 
 ## Keyboard Rule
@@ -42,13 +43,13 @@ website:
 
 `targetctl select --host [deployed EcoCart host] --service ecocart`
 
-The console reports `Target locked: ecocart.ecommerce`. The Attacker
+The console reports `Target vector locked: ecocart.ecommerce`. The Attacker
 types again:
 
 `nodectl attach --pool device-48 --groups req,refresh,connect,page`
 
-The console reports `Node pool attached: 48/48 online` and `All nodes armed`.
-The four groups raise their devices or signs.
+The console reports `Botnet handshake OK | 48/48 zombies beaconing` and `SYN
+cannons armed`. The four groups raise their devices or signs.
 
 ATTACKER
 
@@ -68,9 +69,8 @@ on the system status check:
 
 `systemctl status ecocart.target`
 
-The console plainly reports that website, cart, and checkout are ready and that
-traffic is 2,340 requests per minute. SERVER ADMIN 1 types again to attach the
-live trace:
+The console shows the three services as `active (running)` and the ingress
+baseline at 2,340 req/min. SERVER ADMIN 1 types again to attach the live trace:
 
 `edgectl monitor --live --routes /products,/cart,/checkout`
 
@@ -103,7 +103,8 @@ SERVER ADMIN 2 types random keys:
 
 `edgectl inspect --repeats --top 4`
 
-The console shows repeated checkout, cart, and product requests.
+The console shows the repetition signature isolated across four source clusters
+— repeated `/checkout`, `/cart`, and `/products` hits.
 
 SERVER ADMIN 2
 
@@ -131,8 +132,8 @@ SERVER ADMIN 1 types:
 
 `auditctl verify --scope accounts,orders`
 
-The console reports no suspicious account access and no unauthorized order
-changes.
+The console shows the auth-store audit and order-ledger checksum both clean — no
+unauthorized writes.
 
 SERVER ADMIN 1
 
@@ -149,7 +150,7 @@ SERVER ADMIN 1 types:
 
 `ratectl limit --sources repeated --rate 40/10s`
 
-The console reports that rate limiting is active.
+The console shows the token-bucket limiter armed on all ingress edges.
 
 SERVER ADMIN 1
 
@@ -161,15 +162,15 @@ SERVER ADMIN 2 types:
 
 `wafctl deploy --filter ddos --mode block`
 
-The console reports that suspicious traffic is being blocked and that the
-checkout waiting requests dropped from 1,842 to 126.
+The console shows malicious traffic dropped and the checkout queue depth falling
+from 1,842 to 126.
 
 SERVER ADMIN 2
 
 Filtering is active. Clean customer traffic is returning to checkout.
 
-Cut to the attacker terminal. It reports that the upstream rejection rate is
-rising and most repeated requests are being blocked.
+Cut to the attacker terminal. It shows the upstream WAF retaliating — packets
+scrubbed at the edge and most of the flood blackholed.
 
 ATTACKER
 
@@ -181,11 +182,11 @@ SERVER ADMIN 2 types:
 
 `healthctl probe --routes storefront,cart,checkout`
 
-The console reports:
+The console shows synthetic probe results:
 
-- Website test passed.
-- Customer cart items remained saved.
-- Checkout completed successfully.
+- `GET /products → HTTP 200` passed.
+- Session store intact — cart payloads persisted.
+- `POST /checkout → HTTP 201` order committed.
 
 SERVER ADMIN 2
 

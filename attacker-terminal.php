@@ -11,11 +11,11 @@ if ($targetHost === '' || $targetHost === null) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="description" content="EcoCart traffic control console.">
+    <meta name="description" content="SWARMGRID C2 botnet orchestration console.">
     <meta name="theme-color" content="#03070c">
-    <title>EcoCart Traffic Control</title>
+    <title>SWARMGRID C2</title>
     <link href="public/output.css?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/public/output.css')) ?>" rel="stylesheet">
-    <link rel="icon" type="image/svg+xml" href="assets/traffic-control-icon.svg">
+    <link rel="icon" type="image/png" href="assets/images/swarmgrid-c2-icon.png">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body class="attacker-body min-h-screen overflow-x-hidden text-slate-100" data-attacker-target="<?= htmlspecialchars($targetHost, ENT_QUOTES, 'UTF-8') ?>">
@@ -28,10 +28,10 @@ if ($targetHost === '' || $targetHost === null) {
             </div>
             <span class="h-5 w-px bg-slate-800"></span>
             <div class="flex items-center gap-2">
-                <i data-lucide="square-terminal" class="h-4 w-4 text-rose-400"></i>
-                <span class="font-mono text-xs font-black text-slate-300">EcoCart Traffic Control</span>
+                <i data-lucide="skull" class="h-4 w-4 text-rose-400"></i>
+                <span class="font-mono text-xs font-black text-rose-300">SWARMGRID C2</span>
             </div>
-            <span class="ml-auto hidden font-mono text-[9px] uppercase text-slate-600 sm:inline">session R-0428</span>
+            <span class="ml-auto hidden font-mono text-[9px] uppercase text-slate-600 sm:inline">op BLACKOUT // session R-0428</span>
             <button class="btn btn-square btn-xs border-slate-700 bg-slate-900 text-slate-400 hover:border-cyan-400 hover:text-cyan-300" type="button" data-terminal-fullscreen aria-label="Open full screen" title="Full screen">
                 <i data-lucide="maximize" class="h-3.5 w-3.5"></i>
             </button>
@@ -46,7 +46,7 @@ if ($targetHost === '' || $targetHost === null) {
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>
                 <p class="font-mono text-[10px] uppercase text-slate-600">Command terminal</p>
-                <p class="mt-1 font-mono text-xs font-black text-slate-300">Traffic controller / ready for input</p>
+                <p class="mt-1 font-mono text-xs font-black text-slate-300">botnet orchestrator / awaiting orders</p>
                 </div>
                 <span class="rounded bg-emerald-400/10 px-2 py-1 font-mono text-[9px] font-black text-emerald-400" data-attacker-status>STANDBY</span>
             </div>

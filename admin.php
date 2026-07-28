@@ -248,18 +248,18 @@ $customerImpact = [
                 <div class="ops-panel-heading">
                     <div>
                         <h2>Service path</h2>
-                        <p>Current health across the checkout request path.</p>
+                        <p>Live health probe across the ingress → checkout hop chain.</p>
                     </div>
                     <span class="rounded bg-emerald-400/15 px-2 py-1 text-[10px] font-black uppercase text-emerald-300" data-service-summary>Healthy</span>
                 </div>
                 <div class="mt-6 flex items-center justify-between gap-2">
                     <?php
                     $services = [
-                        ['edge', 'Entry', 'cloud'],
-                        ['waf', 'Traffic filter', 'shield'],
-                        ['app', 'Website', 'boxes'],
-                        ['checkout', 'Checkout', 'credit-card'],
-                        ['db', 'Orders', 'database'],
+                        ['edge', 'Ingress', 'cloud'],
+                        ['waf', 'WAF', 'shield'],
+                        ['app', 'Origin', 'boxes'],
+                        ['checkout', 'Checkout API', 'credit-card'],
+                        ['db', 'Ledger', 'database'],
                     ];
                     ?>
                     <?php foreach ($services as $index => $service): ?>
@@ -272,24 +272,24 @@ $customerImpact = [
                 </div>
                 <div class="mt-7 grid gap-3 sm:grid-cols-3">
                     <div class="rounded-lg border border-slate-700 bg-slate-900/60 p-3">
-                        <p class="text-[10px] font-bold uppercase text-slate-500">Active sessions</p>
+                        <p class="text-[10px] font-bold uppercase text-slate-500">Live TCP sessions</p>
                         <p class="mt-1 text-lg font-black">30</p>
                     </div>
                     <div class="rounded-lg border border-slate-700 bg-slate-900/60 p-3">
-                        <p class="text-[10px] font-bold uppercase text-slate-500">Orders recorded</p>
+                        <p class="text-[10px] font-bold uppercase text-slate-500">Orders committed</p>
                         <p class="mt-1 text-lg font-black"><?= $orderCount ?></p>
                     </div>
                     <div class="rounded-lg border border-slate-700 bg-slate-900/60 p-3">
-                        <p class="text-[10px] font-bold uppercase text-slate-500">Recorded value</p>
+                        <p class="text-[10px] font-bold uppercase text-slate-500">Ledger value</p>
                         <p class="mt-1 text-lg font-black"><?= peso($orderTotal) ?></p>
                     </div>
                 </div>
                 <div class="mt-4 rounded-lg border border-slate-700 bg-slate-900/60 p-4">
                     <div class="flex items-center justify-between">
-                        <p class="text-xs font-black uppercase text-slate-400">Security finding</p>
-                        <span class="text-[10px] font-bold text-slate-500" data-breach-status>Pending analysis</span>
+                        <p class="text-xs font-black uppercase text-slate-400">Threat analysis</p>
+                        <span class="text-[10px] font-bold text-slate-500" data-breach-status>Standby</span>
                     </div>
-                    <p class="mt-2 text-sm leading-6 text-slate-300" data-security-finding>No evidence has been collected for the current trace.</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-300" data-security-finding>No packet capture staged for the current trace window.</p>
                 </div>
             </article>
         </section>

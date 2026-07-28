@@ -13,7 +13,7 @@
   "license": "ISC",
   "build": {
     "appId": "com.ecocart.trafficcontrol",
-    "productName": "EcoCart Traffic Control",
+    "productName": "SWARMGRID C2",
     "files": [
       "main.js",
       "preload.js",
@@ -25,13 +25,16 @@
       "output": "installer"
     },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/icon.ico"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "EcoCart Traffic Control"
+      "shortcutName": "SWARMGRID C2",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
     }
   },
   "devDependencies": {
