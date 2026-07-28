@@ -10,7 +10,8 @@ if ($targetHost === '' || $targetHost === null) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="EcoCart traffic-control scene console.">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="EcoCart traffic control console.">
     <meta name="theme-color" content="#03070c">
     <title>EcoCart Traffic Control</title>
     <link href="public/output.css" rel="stylesheet">

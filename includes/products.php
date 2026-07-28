@@ -3,14 +3,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
 
-function demo_products(): array
+function fallback_products(): array
 {
     return [
         [
             'id' => 1,
             'name' => 'School Supplies Set',
             'category' => 'Students',
-            'description' => 'Notebook set, pens, folders, and study essentials for the classmates waiting in the classroom.',
+            'description' => 'A complete study bundle with notebooks, pens, folders, and daily classroom essentials.',
             'price' => 349.00,
             'stock' => 38,
             'image_url' => 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=900&q=80',
@@ -19,7 +19,7 @@ function demo_products(): array
             'id' => 2,
             'name' => 'Sale Sneakers',
             'category' => 'Students',
-            'description' => 'Discounted shoes for the classmates racing to checkout when the sale opens.',
+            'description' => 'Lightweight everyday sneakers with cushioned support for school, errands, and weekends.',
             'price' => 899.00,
             'stock' => 31,
             'image_url' => 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80',
@@ -55,7 +55,7 @@ function demo_products(): array
             'id' => 6,
             'name' => 'Basic Tool Set',
             'category' => 'Construction',
-            'description' => 'Everyday work tools requested by the construction workers in the community sale scene.',
+            'description' => 'A compact everyday tool kit with the essentials for repairs, assembly, and site work.',
             'price' => 649.00,
             'stock' => 19,
             'image_url' => 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=80',
@@ -64,7 +64,7 @@ function demo_products(): array
             'id' => 7,
             'name' => 'Motorcycle Phone Holder',
             'category' => 'Rider',
-            'description' => 'A handlebar phone holder for the Pick Me rider checking directions while working.',
+            'description' => 'A secure handlebar phone mount that keeps directions visible while riding.',
             'price' => 249.00,
             'stock' => 44,
             'image_url' => 'https://images.unsplash.com/photo-1558980394-4c7c9299fe96?auto=format&fit=crop&w=900&q=80',
@@ -82,7 +82,7 @@ function demo_products(): array
             'id' => 9,
             'name' => 'Kalha Cooking Pot',
             'category' => 'Barangay',
-            'description' => 'A sturdy cooking pot for the nanay who switches from barangay chika to the EcoCart sale.',
+            'description' => 'A sturdy stainless cooking pot for soups, stews, rice dishes, and family meals.',
             'price' => 399.00,
             'stock' => 26,
             'image_url' => 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=80',
@@ -100,7 +100,7 @@ function demo_products(): array
             'id' => 11,
             'name' => 'Baby Formula Pack',
             'category' => 'Family',
-            'description' => 'Essential baby formula from the mother and family scene.',
+            'description' => 'A convenient formula multipack prepared for everyday feeding routines.',
             'price' => 699.00,
             'stock' => 13,
             'image_url' => 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=900&q=80',
@@ -109,7 +109,7 @@ function demo_products(): array
             'id' => 12,
             'name' => 'Diaper Bundle',
             'category' => 'Family',
-            'description' => 'Discounted diapers for the mother trying to save money for the baby checkup.',
+            'description' => 'Soft, absorbent diapers bundled for dependable everyday comfort and care.',
             'price' => 599.00,
             'stock' => 24,
             'image_url' => 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=900&q=80',
@@ -118,7 +118,7 @@ function demo_products(): array
             'id' => 13,
             'name' => 'Baby Clothes Set',
             'category' => 'Family',
-            'description' => 'Soft baby clothes added to the family cart before the checkout error scene.',
+            'description' => 'Soft, breathable baby basics made for comfortable all-day wear.',
             'price' => 449.00,
             'stock' => 20,
             'image_url' => 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=900&q=80',
@@ -140,7 +140,7 @@ function products(): array
     $pdo = db();
 
     if (!$pdo) {
-        return demo_products();
+        return fallback_products();
     }
 
     try {
@@ -152,9 +152,25 @@ function products(): array
         );
 
         $rows = $statement->fetchAll();
-        return $rows ?: demo_products();
+        if (!$rows) {
+            return fallback_products();
+        }
+
+        $fallbackDescriptions = [];
+        foreach (fallback_products() as $product) {
+            $fallbackDescriptions[(int) $product['id']] = (string) $product['description'];
+        }
+        foreach ($rows as &$row) {
+            $productId = (int) $row['id'];
+            if (isset($fallbackDescriptions[$productId])) {
+                $row['description'] = $fallbackDescriptions[$productId];
+            }
+        }
+        unset($row);
+
+        return $rows;
     } catch (Throwable $error) {
-        return demo_products();
+        return fallback_products();
     }
 }
 

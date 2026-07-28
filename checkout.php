@@ -2,14 +2,21 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/products.php';
+require_once __DIR__ . '/includes/auth.php';
 
 $errors = [];
 $success = false;
 $orderId = null;
 $subtotal = 0.0;
 $orderTotal = 0.0;
+$currentUser = current_user();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_is_valid($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        $errors[] = 'Your checkout session expired. Refresh the page and try again.';
+    }
+
     $name = trim((string) ($_POST['customer_name'] ?? ''));
     $email = trim((string) ($_POST['email'] ?? ''));
     $phone = trim((string) ($_POST['phone'] ?? ''));
@@ -124,6 +131,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i data-lucide="shield-check" class="h-4 w-4"></i>
                     Secure checkout
                 </span>
+                <a class="btn btn-square btn-sm border-slate-200 bg-white text-slate-700 hover:border-slate-950" href="<?= $currentUser ? 'account.php' : 'login.php?next=checkout.php' ?>" aria-label="<?= $currentUser ? 'Open my account' : 'Sign in' ?>" title="<?= $currentUser ? 'My account' : 'Sign in' ?>">
+                    <i data-lucide="user-round" class="h-4 w-4"></i>
+                </a>
                 <a class="btn btn-sm border-slate-200 bg-white text-slate-700 hover:border-slate-950 hover:bg-slate-50" href="index.php#products">
                     <i data-lucide="arrow-left" class="h-4 w-4"></i>
                     <span class="hidden sm:inline">Continue shopping</span>
@@ -218,22 +228,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </section>
 
                 <form class="overflow-hidden rounded-lg border border-slate-200 bg-white xl:sticky xl:top-5" method="post" data-checkout-form>
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                     <input type="hidden" name="cart_json" data-cart-json>
 
                     <div class="border-b border-slate-200 p-5 sm:p-6">
                         <div class="flex items-center gap-3">
                             <span class="grid h-9 w-9 place-items-center rounded-lg bg-slate-950 text-white"><i data-lucide="map-pin" class="h-4 w-4"></i></span>
-                            <div><h2 class="text-lg font-black">Delivery information</h2><p class="text-xs text-slate-500">We&apos;ll use these details for updates.</p></div>
+                            <div>
+                                <h2 class="text-lg font-black">Delivery information</h2>
+                                <p class="text-xs text-slate-500"><?= $currentUser ? 'Signed in as ' . htmlspecialchars((string) $currentUser['email']) : 'We&apos;ll use these details for updates.' ?></p>
+                            </div>
                         </div>
 
                         <div class="mt-5 grid gap-4 sm:grid-cols-2">
                             <label class="block sm:col-span-2">
                                 <span class="mb-1.5 block text-xs font-black">Full name</span>
-                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white focus:border-slate-950 focus:outline-none" name="customer_name" autocomplete="name" value="<?= htmlspecialchars((string) ($_POST['customer_name'] ?? '')) ?>" placeholder="Juan Dela Cruz" required>
+                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white focus:border-slate-950 focus:outline-none" name="customer_name" autocomplete="name" value="<?= htmlspecialchars((string) ($_POST['customer_name'] ?? $currentUser['name'] ?? '')) ?>" placeholder="Juan Dela Cruz" required>
                             </label>
                             <label class="block">
                                 <span class="mb-1.5 block text-xs font-black">Email</span>
-                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white focus:border-slate-950 focus:outline-none" type="email" name="email" autocomplete="email" value="<?= htmlspecialchars((string) ($_POST['email'] ?? '')) ?>" placeholder="juan@email.com" required>
+                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white focus:border-slate-950 focus:outline-none" type="email" name="email" autocomplete="email" value="<?= htmlspecialchars((string) ($_POST['email'] ?? $currentUser['email'] ?? '')) ?>" placeholder="juan@email.com" required>
                             </label>
                             <label class="block">
                                 <span class="mb-1.5 block text-xs font-black">Mobile number</span>

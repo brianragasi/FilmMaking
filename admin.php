@@ -1,7 +1,11 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/products.php';
+
+$operator = require_admin();
+auth_no_store();
 
 $orderCount = 0;
 $orderTotal = 0.0;
@@ -35,6 +39,7 @@ $customerImpact = [
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="description" content="EcoCart production operations center.">
     <title>EcoCart Operations | Production</title>
     <link href="public/output.css" rel="stylesheet">
@@ -65,12 +70,18 @@ $customerImpact = [
                 </div>
                 <span class="hidden h-7 w-px bg-slate-700 md:block"></span>
                 <div class="hidden text-right lg:block">
-                    <p class="font-bold">NOC shift A</p>
-                    <p class="text-[10px] text-emerald-400">2 engineers on call</p>
+                    <p class="font-bold"><?= htmlspecialchars((string) $operator['name']) ?></p>
+                    <p class="text-[10px] text-emerald-400">Authenticated operator</p>
                 </div>
                 <a class="btn btn-square btn-sm border-slate-700 bg-slate-800 text-slate-200 hover:border-cyan-400 hover:bg-slate-700" href="index.php" aria-label="Open storefront" title="Open storefront">
                     <i data-lucide="external-link" class="h-4 w-4"></i>
                 </a>
+                <form method="post" action="logout.php">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                    <button class="btn btn-square btn-sm border-slate-700 bg-slate-800 text-slate-200 hover:border-rose-400 hover:bg-slate-700" type="submit" aria-label="Sign out" title="Sign out">
+                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </header>

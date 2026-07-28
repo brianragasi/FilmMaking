@@ -2,8 +2,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/includes/products.php';
+require_once __DIR__ . '/includes/auth.php';
 
 $products = products();
+$currentUser = current_user();
+$accountName = $currentUser ? trim(explode(' ', (string) $currentUser['name'])[0] ?? (string) $currentUser['name']) : '';
 $departments = [
     ['name' => 'School', 'filter' => 'students', 'label' => 'Student picks', 'icon' => 'graduation-cap', 'tone' => 'bg-cyan-50 text-cyan-700'],
     ['name' => 'Worksite', 'filter' => 'construction', 'label' => 'Safety and tools', 'icon' => 'hard-hat', 'tone' => 'bg-amber-50 text-amber-700'],
@@ -22,6 +25,24 @@ $storyPicks = array_slice($products, 0, 6);
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="EcoCart Big Blowout Sale - everyday essentials for students, workers, riders, and families.">
+    <link rel="canonical" href="https://ecocart-mnl.site.je/">
+    <meta property="og:title" content="EcoCart | Big Blowout Sale">
+    <meta property="og:description" content="Shop school, worksite, rider, home, and family essentials at unusually good prices.">
+    <meta property="og:image" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
+    <meta property="og:image:secure_url" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1730">
+    <meta property="og:image:height" content="909">
+    <meta property="og:image:alt" content="EcoCart sale collection with school, worksite, rider, home, and family essentials">
+    <meta property="og:url" content="https://ecocart-mnl.site.je/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="EcoCart">
+    <meta property="og:locale" content="en_PH">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="EcoCart | Big Blowout Sale">
+    <meta name="twitter:description" content="Shop school, worksite, rider, home, and family essentials at unusually good prices.">
+    <meta name="twitter:image" content="https://ecocart-mnl.site.je/assets/images/ecocart-share.png">
+    <meta name="twitter:image:alt" content="EcoCart sale collection with school, worksite, rider, home, and family essentials">
     <title>EcoCart | Big Blowout Sale</title>
     <link href="public/output.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -70,10 +91,13 @@ $storyPicks = array_slice($products, 0, 6);
             </form>
 
             <nav class="ml-auto flex items-center gap-2 sm:gap-4" aria-label="Customer actions">
-                <button class="hidden items-center gap-2 text-left text-xs font-bold text-slate-700 transition hover:text-rose-600 sm:flex" type="button">
+                <a class="flex items-center gap-2 text-left text-xs font-bold text-slate-700 transition hover:text-rose-600" href="<?= $currentUser ? 'account.php' : 'login.php' ?>" aria-label="<?= $currentUser ? 'Open my account' : 'Sign in' ?>">
                     <span class="grid h-9 w-9 place-items-center rounded-lg bg-slate-100"><i data-lucide="user-round" class="h-5 w-5"></i></span>
-                    <span class="hidden xl:block"><span class="block text-[10px] font-semibold text-slate-400">Welcome</span>My account</span>
-                </button>
+                    <span class="hidden xl:block">
+                        <span class="block text-[10px] font-semibold text-slate-400"><?= $currentUser ? 'Welcome, ' . htmlspecialchars($accountName) : 'Welcome' ?></span>
+                        <?= $currentUser ? 'My account' : 'Sign in' ?>
+                    </span>
+                </a>
                 <button class="relative grid h-10 w-10 place-items-center rounded-lg text-slate-700 transition hover:bg-rose-50 hover:text-rose-600" type="button" aria-label="Wishlist">
                     <i data-lucide="heart" class="h-5 w-5"></i>
                     <span class="absolute right-0 top-0 grid h-4 min-w-4 place-items-center rounded-full bg-rose-600 px-1 text-[9px] font-black text-white" data-wishlist-count>0</span>
