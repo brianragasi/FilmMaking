@@ -42,7 +42,9 @@ runtime files to `/ecocart-mnl.site.je/htdocs/` over FTPS.
 The database is not created by FTP deployment:
 
 1. Create a MySQL database in InfinityFree.
-2. Open its phpMyAdmin and import `database/schema.sql`.
+2. Open its phpMyAdmin, select the new database, and import
+   `database/schema.sql`. The script creates only the EcoCart tables and seed
+   products inside the selected database.
 3. In InfinityFree File Manager, copy `includes/config.local.example.php` to
    `includes/config.local.php`.
 4. Replace the example values with the exact MySQL hostname, database name,

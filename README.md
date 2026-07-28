@@ -6,8 +6,9 @@ EcoCart is a PHP, MySQL, XAMPP, HTML, JavaScript, and DaisyUI demo system for th
 
 1. Start Apache and MySQL in XAMPP.
 2. Open phpMyAdmin.
-3. Import `database/schema.sql`.
-4. Visit `http://localhost/Ecommerce/index.php`.
+3. Create a database named `ecocart_demo`.
+4. Select that database and import `database/schema.sql`.
+5. Visit `http://localhost/Ecommerce/index.php`.
 
 The storefront works in demo mode even before the database is imported. Orders are saved only after MySQL is connected.
 

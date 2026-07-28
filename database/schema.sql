@@ -1,9 +1,3 @@
-CREATE DATABASE IF NOT EXISTS ecocart_demo
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE ecocart_demo;
-
 CREATE TABLE IF NOT EXISTS products (
   id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(120) NOT NULL,
