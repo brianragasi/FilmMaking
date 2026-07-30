@@ -219,17 +219,25 @@ function attempt_login(string $email, string $password): bool
             $user = $statement->fetch();
 
             if ($user && password_verify($password, (string) $user['password_hash'])) {
-                if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
-                    $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
-                    $rehash->execute([
-                        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                        'id' => (int) $user['id'],
-                    ]);
+                sign_in_user($user);
+
+                // Authentication must not fail when optional account metadata
+                // cannot be updated (for example, on an older production schema).
+                try {
+                    if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
+                        $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
+                        $rehash->execute([
+                            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                            'id' => (int) $user['id'],
+                        ]);
+                    }
+
+                    $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
+                    $update->execute(['id' => (int) $user['id']]);
+                } catch (Throwable $error) {
+                    // The verified account remains signed in; these writes are best-effort.
                 }
 
-                $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
-                $update->execute(['id' => (int) $user['id']]);
-                sign_in_user($user);
                 return true;
             }
         } catch (Throwable $error) {

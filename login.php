@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$errors) {
             $result = register_customer($name, $email, $password);
             if ($result['ok']) {
+                $_SESSION['account_notice'] = 'Your EcoCart account was created successfully. You are now signed in.';
                 header('Location: ' . $next);
                 exit;
             }
