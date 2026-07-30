@@ -221,8 +221,6 @@ function attempt_login(string $email, string $password): bool
             if ($user && password_verify($password, (string) $user['password_hash'])) {
                 sign_in_user($user);
 
-                // Authentication must not fail when optional account metadata
-                // cannot be updated (for example, on an older production schema).
                 try {
                     if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
                         $rehash = $pdo->prepare('UPDATE ecocart_users SET password_hash = :password_hash WHERE id = :id');
@@ -235,7 +233,7 @@ function attempt_login(string $email, string $password): bool
                     $update = $pdo->prepare('UPDATE ecocart_users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
                     $update->execute(['id' => (int) $user['id']]);
                 } catch (Throwable $error) {
-                    // The verified account remains signed in; these writes are best-effort.
+                    error_log('[EcoCart auth metadata] ' . $error->getMessage());
                 }
 
                 return true;
@@ -273,34 +271,109 @@ function register_customer(string $name, string $email, string $password): array
         return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
     }
 
+    $normalizedEmail = strtolower(trim($email));
+
     try {
+        $existingStatement = $pdo->prepare(
+            'SELECT id, name, email, password_hash, role
+             FROM ecocart_users
+             WHERE email = :email
+             LIMIT 1'
+        );
+        $existingStatement->execute(['email' => $normalizedEmail]);
+        $existingUser = $existingStatement->fetch();
+
+        if ($existingUser) {
+            if (
+                (string) ($existingUser['role'] ?? 'customer') === 'customer'
+                && password_verify($password, (string) $existingUser['password_hash'])
+            ) {
+                sign_in_user($existingUser);
+                return [
+                    'ok' => true,
+                    'created' => false,
+                    'message' => 'Your account already existed, so we signed you in.',
+                ];
+            }
+
+            return [
+                'ok' => false,
+                'created' => false,
+                'code' => 'email_exists',
+                'message' => 'An account already uses that email address. Sign in instead.',
+            ];
+        }
+
         $statement = $pdo->prepare(
             "INSERT INTO ecocart_users (name, email, password_hash, role)
              VALUES (:name, :email, :password_hash, 'customer')"
         );
         $statement->execute([
             'name' => $name,
-            'email' => strtolower($email),
+            'email' => $normalizedEmail,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         ]);
 
         sign_in_user([
             'id' => (int) $pdo->lastInsertId(),
             'name' => $name,
-            'email' => strtolower($email),
+            'email' => $normalizedEmail,
             'role' => 'customer',
         ]);
-        return ['ok' => true, 'message' => ''];
+        return [
+            'ok' => true,
+            'created' => true,
+            'message' => 'Your EcoCart account was created successfully. You are now signed in.',
+        ];
     } catch (PDOException $error) {
         $driverCode = isset($error->errorInfo[1]) ? (int) $error->errorInfo[1] : 0;
         if ($driverCode === 1062) {
-            return ['ok' => false, 'message' => 'An account already uses that email address.'];
+            try {
+                $existingStatement = $pdo->prepare(
+                    'SELECT id, name, email, password_hash, role
+                     FROM ecocart_users
+                     WHERE email = :email
+                     LIMIT 1'
+                );
+                $existingStatement->execute(['email' => $normalizedEmail]);
+                $existingUser = $existingStatement->fetch();
+
+                if (
+                    $existingUser
+                    && (string) ($existingUser['role'] ?? 'customer') === 'customer'
+                    && password_verify($password, (string) $existingUser['password_hash'])
+                ) {
+                    sign_in_user($existingUser);
+                    return [
+                        'ok' => true,
+                        'created' => false,
+                        'message' => 'Your account already existed, so we signed you in.',
+                    ];
+                }
+            } catch (Throwable $lookupError) {
+                error_log('[EcoCart registration recovery] ' . $lookupError->getMessage());
+            }
+
+            return [
+                'ok' => false,
+                'created' => false,
+                'code' => 'email_exists',
+                'message' => 'An account already uses that email address. Sign in instead.',
+            ];
         }
         error_log('EcoCart account registration failed: ' . $error->getMessage());
-        return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
+        return [
+            'ok' => false,
+            'created' => false,
+            'message' => 'Accounts are temporarily unavailable. Please try again shortly.',
+        ];
     } catch (Throwable $error) {
         error_log('EcoCart account registration failed: ' . $error->getMessage());
-        return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
+        return [
+            'ok' => false,
+            'created' => false,
+            'message' => 'Accounts are temporarily unavailable. Please try again shortly.',
+        ];
     }
 }
 
