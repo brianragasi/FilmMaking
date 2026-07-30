@@ -15,7 +15,8 @@ function escapeHtml(value) {
 
 function safeImageUrl(value) {
   const url = String(value ?? '');
-  return /^https?:\/\//i.test(url) ? url : '';
+  if (/^https?:\/\//i.test(url)) return url;
+  return /^image\/[a-z0-9._% -]+$/i.test(url) ? url : '';
 }
 
 const systemStates = {

@@ -13,7 +13,7 @@ function fallback_products(): array
             'description' => 'A complete study bundle with notebooks, pens, folders, and daily classroom essentials.',
             'price' => 349.00,
             'stock' => 38,
-            'image_url' => 'https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/School%20supplies%20set.jpg',
         ],
         [
             'id' => 2,
@@ -49,7 +49,7 @@ function fallback_products(): array
             'description' => 'Durable protective helmet for job-site safety and field work.',
             'price' => 499.00,
             'stock' => 22,
-            'image_url' => 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/Work%20Safety%20Helmet.jpg',
         ],
         [
             'id' => 6,
@@ -67,7 +67,7 @@ function fallback_products(): array
             'description' => 'A secure handlebar phone mount that keeps directions visible while riding.',
             'price' => 249.00,
             'stock' => 44,
-            'image_url' => 'https://images.unsplash.com/photo-1558980394-4c7c9299fe96?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/phone%20holder.jpg',
         ],
         [
             'id' => 8,
@@ -76,7 +76,7 @@ function fallback_products(): array
             'description' => 'Lightweight rain jacket and waterproof pouch for daily delivery rides.',
             'price' => 799.00,
             'stock' => 17,
-            'image_url' => 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/motorcycle%20rain%20gear.jpg',
         ],
         [
             'id' => 9,
@@ -85,7 +85,7 @@ function fallback_products(): array
             'description' => 'A sturdy stainless cooking pot for soups, stews, rice dishes, and family meals.',
             'price' => 399.00,
             'stock' => 26,
-            'image_url' => 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/kalha%20cooking%20pot.jpg',
         ],
         [
             'id' => 10,
@@ -94,7 +94,7 @@ function fallback_products(): array
             'description' => 'A clean curtain set for homes, waiting-shed shoppers, and family spaces.',
             'price' => 299.00,
             'stock' => 54,
-            'image_url' => 'https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/home%20curtain%20set.jpg',
         ],
         [
             'id' => 11,
@@ -103,7 +103,7 @@ function fallback_products(): array
             'description' => 'A convenient formula multipack prepared for everyday feeding routines.',
             'price' => 699.00,
             'stock' => 13,
-            'image_url' => 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/Baby%20Formula%20Pack.jpg',
         ],
         [
             'id' => 12,
@@ -112,7 +112,7 @@ function fallback_products(): array
             'description' => 'Soft, absorbent diapers bundled for dependable everyday comfort and care.',
             'price' => 599.00,
             'stock' => 24,
-            'image_url' => 'https://images.unsplash.com/photo-1586015555751-63bb77f4322a?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/diaper_bundle.jpg',
         ],
         [
             'id' => 13,
@@ -121,7 +121,7 @@ function fallback_products(): array
             'description' => 'Soft, breathable baby basics made for comfortable all-day wear.',
             'price' => 449.00,
             'stock' => 20,
-            'image_url' => 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/Baby%20set%20clothes.jpg',
         ],
         [
             'id' => 14,
@@ -130,7 +130,7 @@ function fallback_products(): array
             'description' => 'Baby feeding bottles for the mother and family essential-needs cart.',
             'price' => 249.00,
             'stock' => 30,
-            'image_url' => 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/feeding%20bottles.jpg',
         ],
     ];
 }
@@ -156,14 +156,18 @@ function products(): array
             return fallback_products();
         }
 
-        $fallbackDescriptions = [];
+        $fallbackProductData = [];
         foreach (fallback_products() as $product) {
-            $fallbackDescriptions[(int) $product['id']] = (string) $product['description'];
+            $fallbackProductData[(string) $product['name']] = [
+                'description' => (string) $product['description'],
+                'image_url' => (string) $product['image_url'],
+            ];
         }
         foreach ($rows as &$row) {
-            $productId = (int) $row['id'];
-            if (isset($fallbackDescriptions[$productId])) {
-                $row['description'] = $fallbackDescriptions[$productId];
+            $productName = (string) $row['name'];
+            if (isset($fallbackProductData[$productName])) {
+                $row['description'] = $fallbackProductData[$productName]['description'];
+                $row['image_url'] = $fallbackProductData[$productName]['image_url'];
             }
         }
         unset($row);
