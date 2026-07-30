@@ -56,11 +56,6 @@ jobs:
           test -n "$DB_NAME"
           test -n "$DB_USER"
           test -n "$DB_PASSWORD"
-          test -n "$ADMIN_EMAIL"
-          test -n "$ADMIN_PASSWORD"
-          test -n "$DIRECTOR_EMAIL"
-          test -n "$DIRECTOR_PASSWORD"
-          test "${ADMIN_EMAIL,,}" != "${DIRECTOR_EMAIL,,}"
           php -r '
           $config = [
               "host" => getenv("DB_HOST"),
@@ -68,12 +63,18 @@ jobs:
               "user" => getenv("DB_USER"),
               "pass" => getenv("DB_PASSWORD"),
           ];
+          $adminEmail = strtolower(trim((string) getenv("ADMIN_EMAIL")));
+          $directorEmail = strtolower(trim((string) getenv("DIRECTOR_EMAIL")));
+          if ($adminEmail !== "" && $directorEmail !== "" && hash_equals($adminEmail, $directorEmail)) {
+              fwrite(STDERR, "Admin and Director must use different email addresses.\n");
+              exit(1);
+          }
           if (getenv("ADMIN_EMAIL") && getenv("ADMIN_PASSWORD")) {
-              $config["admin_email"] = strtolower(trim(getenv("ADMIN_EMAIL")));
+              $config["admin_email"] = $adminEmail;
               $config["admin_password_hash"] = password_hash(getenv("ADMIN_PASSWORD"), PASSWORD_DEFAULT);
           }
           if (getenv("DIRECTOR_EMAIL") && getenv("DIRECTOR_PASSWORD")) {
-              $config["director_email"] = strtolower(trim(getenv("DIRECTOR_EMAIL")));
+              $config["director_email"] = $directorEmail;
               $config["director_password_hash"] = password_hash(getenv("DIRECTOR_PASSWORD"), PASSWORD_DEFAULT);
           }
           file_put_contents("includes/config.local.php", "<?php\nreturn " . var_export($config, true) . ";\n");
