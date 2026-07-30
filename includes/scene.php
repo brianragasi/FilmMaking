@@ -51,6 +51,14 @@ function normalize_scene_state(array $state): array
         'updated_by' => (string) ($state['updated_by'] ?? 'system'),
     ];
 
+    if (
+        $normalized['expires_at']
+        && strtotime($normalized['expires_at']) !== false
+        && strtotime($normalized['expires_at']) <= time()
+    ) {
+        return scene_default_state($normalized['revision'] + 1);
+    }
+
     return $normalized;
 }
 
