@@ -219,17 +219,23 @@ function attempt_login(string $email, string $password): bool
             $user = $statement->fetch();
 
             if ($user && password_verify($password, (string) $user['password_hash'])) {
-                if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
-                    $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
-                    $rehash->execute([
-                        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-                        'id' => (int) $user['id'],
-                    ]);
+                sign_in_user($user);
+
+                try {
+                    if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
+                        $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
+                        $rehash->execute([
+                            'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+                            'id' => (int) $user['id'],
+                        ]);
+                    }
+
+                    $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
+                    $update->execute(['id' => (int) $user['id']]);
+                } catch (Throwable $error) {
+                    error_log('[EcoCart auth metadata] ' . $error->getMessage());
                 }
 
-                $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
-                $update->execute(['id' => (int) $user['id']]);
-                sign_in_user($user);
                 return true;
             }
         } catch (Throwable $error) {
@@ -265,31 +271,106 @@ function register_customer(string $name, string $email, string $password): array
         return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
     }
 
+    $normalizedEmail = strtolower(trim($email));
+
     try {
+        $existingStatement = $pdo->prepare(
+            'SELECT id, name, email, password_hash, role
+             FROM users
+             WHERE email = :email
+             LIMIT 1'
+        );
+        $existingStatement->execute(['email' => $normalizedEmail]);
+        $existingUser = $existingStatement->fetch();
+
+        if ($existingUser) {
+            if (
+                (string) ($existingUser['role'] ?? 'customer') === 'customer'
+                && password_verify($password, (string) $existingUser['password_hash'])
+            ) {
+                sign_in_user($existingUser);
+                return [
+                    'ok' => true,
+                    'created' => false,
+                    'message' => 'Your account already existed, so we signed you in.',
+                ];
+            }
+
+            return [
+                'ok' => false,
+                'created' => false,
+                'code' => 'email_exists',
+                'message' => 'An account already uses that email address. Sign in instead.',
+            ];
+        }
+
         $statement = $pdo->prepare(
             "INSERT INTO users (name, email, password_hash, role)
              VALUES (:name, :email, :password_hash, 'customer')"
         );
         $statement->execute([
             'name' => $name,
-            'email' => strtolower($email),
+            'email' => $normalizedEmail,
             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
         ]);
 
         sign_in_user([
             'id' => (int) $pdo->lastInsertId(),
             'name' => $name,
-            'email' => strtolower($email),
+            'email' => $normalizedEmail,
             'role' => 'customer',
         ]);
-        return ['ok' => true, 'message' => ''];
+        return [
+            'ok' => true,
+            'created' => true,
+            'message' => 'Your EcoCart account was created successfully. You are now signed in.',
+        ];
     } catch (PDOException $error) {
         if ((string) $error->getCode() === '23000') {
-            return ['ok' => false, 'message' => 'An account already uses that email address.'];
+            try {
+                $existingStatement = $pdo->prepare(
+                    'SELECT id, name, email, password_hash, role
+                     FROM users
+                     WHERE email = :email
+                     LIMIT 1'
+                );
+                $existingStatement->execute(['email' => $normalizedEmail]);
+                $existingUser = $existingStatement->fetch();
+
+                if (
+                    $existingUser
+                    && (string) ($existingUser['role'] ?? 'customer') === 'customer'
+                    && password_verify($password, (string) $existingUser['password_hash'])
+                ) {
+                    sign_in_user($existingUser);
+                    return [
+                        'ok' => true,
+                        'created' => false,
+                        'message' => 'Your account already existed, so we signed you in.',
+                    ];
+                }
+            } catch (Throwable $lookupError) {
+                error_log('[EcoCart registration recovery] ' . $lookupError->getMessage());
+            }
+
+            return [
+                'ok' => false,
+                'created' => false,
+                'code' => 'email_exists',
+                'message' => 'An account already uses that email address. Sign in instead.',
+            ];
         }
-        return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
+        return [
+            'ok' => false,
+            'created' => false,
+            'message' => 'Accounts are temporarily unavailable. Please try again shortly.',
+        ];
     } catch (Throwable $error) {
-        return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
+        return [
+            'ok' => false,
+            'created' => false,
+            'message' => 'Accounts are temporarily unavailable. Please try again shortly.',
+        ];
     }
 }
 

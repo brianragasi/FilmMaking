@@ -9,6 +9,7 @@ $next = safe_next_path((string) ($_POST['next'] ?? $_GET['next'] ?? 'account.php
 $mode = (string) ($_POST['mode'] ?? $_GET['mode'] ?? 'login');
 $mode = $mode === 'register' ? 'register' : 'login';
 $errors = [];
+$registrationErrorCode = null;
 
 if ($existingUser = current_user()) {
     header('Location: ' . ($next !== 'account.php' ? $next : user_home($existingUser)));
@@ -40,9 +41,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$errors) {
             $result = register_customer($name, $email, $password);
             if ($result['ok']) {
-                header('Location: ' . $next);
+                $_SESSION['account_notice'] = (string) $result['message'];
+                $registeredUser = current_user();
+                header('Location: ' . ($next !== 'account.php' ? $next : user_home($registeredUser ?? [])));
                 exit;
             }
+            $registrationErrorCode = (string) ($result['code'] ?? '');
             $errors[] = (string) $result['message'];
         }
     } else {
@@ -107,6 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <?php foreach (array_unique($errors) as $error): ?>
                                         <p><?= htmlspecialchars($error) ?></p>
                                     <?php endforeach; ?>
+                                    <?php if ($mode === 'register' && $registrationErrorCode === 'email_exists'): ?>
+                                        <a class="mt-2 inline-flex font-black text-rose-700 underline" href="login.php?mode=login&amp;next=<?= rawurlencode($next) ?>">Open the sign-in form</a>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </div>
