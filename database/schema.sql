@@ -45,7 +45,7 @@ INSERT INTO products (name, category, description, price, stock, image_url, is_a
 ('Motorcycle Rain Gear', 'Rider', 'Lightweight rain jacket and waterproof pouch for daily delivery rides.', 799.00, 17, 'image/motorcycle%20rain%20gear.jpg', 1),
 ('Kalha Cooking Pot', 'Barangay', 'A sturdy stainless cooking pot for soups, stews, rice dishes, and family meals.', 399.00, 26, 'image/kalha%20cooking%20pot.jpg', 1),
 ('Home Curtain Set', 'Barangay', 'A clean curtain set for homes, waiting-shed shoppers, and family spaces.', 299.00, 54, 'image/home%20curtain%20set.jpg', 1),
-('Baby Formula Pack', 'Family', 'A convenient formula multipack prepared for everyday feeding routines.', 699.00, 13, 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=900&q=80', 1),
+('Baby Formula Pack', 'Family', 'A convenient formula multipack prepared for everyday feeding routines.', 699.00, 13, 'image/Baby%20Formula%20Pack.jpg', 1),
 ('Diaper Bundle', 'Family', 'Soft, absorbent diapers bundled for dependable everyday comfort and care.', 599.00, 24, 'image/diaper_bundle.jpg', 1),
 ('Baby Clothes Set', 'Family', 'Soft, breathable baby basics made for comfortable all-day wear.', 449.00, 20, 'image/Baby%20set%20clothes.jpg', 1),
 ('Feeding Bottles', 'Family', 'Baby feeding bottles for the mother and family essential-needs cart.', 249.00, 30, 'image/feeding%20bottles.jpg', 1)

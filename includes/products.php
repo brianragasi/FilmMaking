@@ -103,7 +103,7 @@ function fallback_products(): array
             'description' => 'A convenient formula multipack prepared for everyday feeding routines.',
             'price' => 699.00,
             'stock' => 13,
-            'image_url' => 'https://images.unsplash.com/photo-1522771930-78848d9293e8?auto=format&fit=crop&w=900&q=80',
+            'image_url' => 'image/Baby%20Formula%20Pack.jpg',
         ],
         [
             'id' => 12,
