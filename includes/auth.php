@@ -52,7 +52,7 @@ function auth_schema_ready(): bool
 
     try {
         $pdo->exec(
-            "CREATE TABLE IF NOT EXISTS users (
+            "CREATE TABLE IF NOT EXISTS ecocart_users (
                 id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(120) NOT NULL,
                 email VARCHAR(160) NOT NULL,
@@ -211,7 +211,7 @@ function attempt_login(string $email, string $password): bool
         try {
             $statement = $pdo->prepare(
                 'SELECT id, name, email, password_hash, role
-                 FROM users
+                 FROM ecocart_users
                  WHERE email = :email
                  LIMIT 1'
             );
@@ -225,14 +225,14 @@ function attempt_login(string $email, string $password): bool
                 // cannot be updated (for example, on an older production schema).
                 try {
                     if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
-                        $rehash = $pdo->prepare('UPDATE users SET password_hash = :password_hash WHERE id = :id');
+                        $rehash = $pdo->prepare('UPDATE ecocart_users SET password_hash = :password_hash WHERE id = :id');
                         $rehash->execute([
                             'password_hash' => password_hash($password, PASSWORD_DEFAULT),
                             'id' => (int) $user['id'],
                         ]);
                     }
 
-                    $update = $pdo->prepare('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
+                    $update = $pdo->prepare('UPDATE ecocart_users SET last_login_at = CURRENT_TIMESTAMP WHERE id = :id');
                     $update->execute(['id' => (int) $user['id']]);
                 } catch (Throwable $error) {
                     // The verified account remains signed in; these writes are best-effort.
@@ -275,7 +275,7 @@ function register_customer(string $name, string $email, string $password): array
 
     try {
         $statement = $pdo->prepare(
-            "INSERT INTO users (name, email, password_hash, role)
+            "INSERT INTO ecocart_users (name, email, password_hash, role)
              VALUES (:name, :email, :password_hash, 'customer')"
         );
         $statement->execute([
@@ -292,11 +292,14 @@ function register_customer(string $name, string $email, string $password): array
         ]);
         return ['ok' => true, 'message' => ''];
     } catch (PDOException $error) {
-        if ((string) $error->getCode() === '23000') {
+        $driverCode = isset($error->errorInfo[1]) ? (int) $error->errorInfo[1] : 0;
+        if ($driverCode === 1062) {
             return ['ok' => false, 'message' => 'An account already uses that email address.'];
         }
+        error_log('EcoCart account registration failed: ' . $error->getMessage());
         return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
     } catch (Throwable $error) {
+        error_log('EcoCart account registration failed: ' . $error->getMessage());
         return ['ok' => false, 'message' => 'Accounts are temporarily unavailable. Please try again shortly.'];
     }
 }
@@ -375,7 +378,7 @@ function refresh_authenticated_user(array $user): array
 
     if ($pdo) {
         try {
-            $statement = $pdo->prepare('SELECT id, name, email, role FROM users WHERE id = :id LIMIT 1');
+            $statement = $pdo->prepare('SELECT id, name, email, role FROM ecocart_users WHERE id = :id LIMIT 1');
             $statement->execute(['id' => (int) $user['id']]);
             $freshUser = $statement->fetch();
 

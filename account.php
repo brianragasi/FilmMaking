@@ -26,7 +26,7 @@ $recentOrders = [];
 
 if ($pdo = db()) {
     try {
-        $createdStmt = $pdo->prepare('SELECT created_at FROM users WHERE id = :id LIMIT 1');
+        $createdStmt = $pdo->prepare('SELECT created_at FROM ecocart_users WHERE id = :id LIMIT 1');
         $createdStmt->execute(['id' => (int) $user['id']]);
         $memberSince = $createdStmt->fetchColumn() ?: null;
 
