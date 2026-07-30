@@ -6,10 +6,6 @@ require_once __DIR__ . '/includes/products.php';
 
 $user = require_login();
 auth_no_store();
-$accountNotice = isset($_SESSION['account_notice']) && is_string($_SESSION['account_notice'])
-    ? $_SESSION['account_notice']
-    : null;
-unset($_SESSION['account_notice']);
 $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['name']);
 
 $role = (string) ($user['role'] ?? 'customer');
@@ -94,15 +90,6 @@ if ($pdo = db()) {
     </header>
 
     <main class="app-shell w-full flex-1 py-6 sm:py-8">
-        <?php if ($accountNotice): ?>
-            <div class="mb-5 rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-950" role="status">
-                <div class="flex items-start gap-3">
-                    <i data-lucide="circle-check" class="mt-0.5 h-5 w-5 shrink-0"></i>
-                    <p><?= htmlspecialchars($accountNotice) ?></p>
-                </div>
-            </div>
-        <?php endif; ?>
-
         <?php if (isset($_GET['denied'])): ?>
             <div class="mb-5 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="alert">
                 <div class="flex items-start gap-3">
