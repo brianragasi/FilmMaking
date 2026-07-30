@@ -55,7 +55,17 @@ $storyPicks = array_slice($products, 0, 6);
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="bg-[#f4f5f7] text-slate-950 antialiased" data-scene-client data-scene-poll="false" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+<body class="bg-[#f4f5f7] text-slate-950 antialiased" data-scene-client data-scene-view="storefront" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+    <div class="sale-takeover hidden" data-sale-takeover role="status" aria-live="polite">
+        <div class="sale-takeover-track" aria-hidden="true">
+            <span>SALE</span><span>SALE</span><span>SALE</span><span>SALE</span>
+        </div>
+        <div class="relative z-10 px-5 text-center text-white">
+            <p class="text-sm font-black uppercase tracking-normal sm:text-lg">EcoCart Big Blowout</p>
+            <p class="mt-2 text-5xl font-black leading-none sm:text-8xl">SALE IS LIVE!</p>
+            <p class="mt-4 text-lg font-black uppercase sm:text-2xl">Up to 70% off - shop now</p>
+        </div>
+    </div>
     <div class="bg-[#e11d48] text-white">
         <div class="app-shell flex min-h-9 items-center justify-between gap-4 text-[11px] font-bold">
             <div class="hidden items-center gap-5 sm:flex">
@@ -64,7 +74,7 @@ $storyPicks = array_slice($products, 0, 6);
             </div>
             <p class="flex flex-1 items-center justify-center gap-2 text-center uppercase">
                 <i data-lucide="zap" class="h-3.5 w-3.5 fill-current"></i>
-                Big Blowout Sale: up to 70% off selected essentials
+                <span data-sale-ribbon-text><?= $sceneState['cue'] === 'sale_live' ? 'SALE IS LIVE NOW - UP TO 70% OFF' : 'Big Blowout Sale: up to 70% off selected essentials' ?></span>
             </p>
             <span class="hidden items-center gap-1.5 lg:flex"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> Nationwide delivery</span>
         </div>

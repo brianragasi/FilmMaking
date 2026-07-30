@@ -48,7 +48,7 @@ $customerImpact = [
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="ops-body min-h-screen bg-[#07101c] text-slate-100" data-scene-client data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+<body class="ops-body min-h-screen bg-[#07101c] text-slate-100" data-scene-client data-scene-view="operations" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
     <header class="border-b border-slate-700/70 bg-[#091421]">
         <div class="app-shell flex min-h-[68px] items-center gap-4">
             <div class="flex items-center gap-3">

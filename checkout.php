@@ -154,7 +154,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-poll="false" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-view="checkout" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
     <div class="fixed inset-0 z-[100] hidden bg-white" data-scene-loading>
         <div class="flex min-h-screen flex-col">
             <header class="border-b border-slate-200">

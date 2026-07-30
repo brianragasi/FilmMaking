@@ -4,33 +4,17 @@ declare(strict_types=1);
 function scene_cues(): array
 {
     return [
-        'standby' => [
-            'label' => 'Standby',
-            'short' => 'Reset every screen before the take.',
+        'restored' => [
+            'label' => 'Website open',
+            'short' => 'EcoCart is available to customer screens.',
         ],
         'sale_live' => [
-            'label' => 'Sale live',
-            'short' => 'The countdown ends and customers begin shopping.',
-        ],
-        'traffic_rising' => [
-            'label' => 'Traffic rising',
-            'short' => 'The attacker begins and the operations graph climbs.',
-        ],
-        'checkout_loading' => [
-            'label' => 'Checkout loading',
-            'short' => 'Sarah clicks checkout and the loading screen holds.',
+            'label' => 'Sale is live',
+            'short' => 'Customer screens announce that the Big Blowout Sale is live.',
         ],
         'outage' => [
             'label' => 'Website down',
-            'short' => 'The next customer refresh returns the server error.',
-        ],
-        'recovery' => [
-            'label' => 'Recovering',
-            'short' => 'Filtering is active while customers continue waiting.',
-        ],
-        'restored' => [
-            'label' => 'Services restored',
-            'short' => 'The next refresh returns the working store and saved cart.',
+            'short' => 'Customer screens display the EcoCart server-error scene.',
         ],
     ];
 }
@@ -38,7 +22,7 @@ function scene_cues(): array
 function scene_default_state(int $revision = 0): array
 {
     return [
-        'cue' => 'standby',
+        'cue' => 'restored',
         'revision' => $revision,
         'updated_at' => gmdate(DATE_ATOM),
         'expires_at' => null,
@@ -54,9 +38,9 @@ function scene_state_path(): string
 function normalize_scene_state(array $state): array
 {
     $cues = scene_cues();
-    $cue = (string) ($state['cue'] ?? 'standby');
+    $cue = (string) ($state['cue'] ?? 'restored');
     if (!isset($cues[$cue])) {
-        $cue = 'standby';
+        $cue = 'restored';
     }
 
     $normalized = [
@@ -66,15 +50,6 @@ function normalize_scene_state(array $state): array
         'expires_at' => isset($state['expires_at']) ? (string) $state['expires_at'] : null,
         'updated_by' => (string) ($state['updated_by'] ?? 'system'),
     ];
-
-    if (
-        $normalized['cue'] !== 'standby'
-        && $normalized['expires_at']
-        && strtotime($normalized['expires_at']) !== false
-        && strtotime($normalized['expires_at']) <= time()
-    ) {
-        return scene_default_state($normalized['revision'] + 1);
-    }
 
     return $normalized;
 }
@@ -129,7 +104,7 @@ function update_scene_state(string $cue, array $operator): array
             'cue' => $cue,
             'revision' => (int) $current['revision'] + 1,
             'updated_at' => gmdate(DATE_ATOM),
-            'expires_at' => $cue === 'standby' ? null : gmdate(DATE_ATOM, time() + 900),
+            'expires_at' => null,
             'updated_by' => (string) ($operator['email'] ?? 'director'),
         ];
 
@@ -155,7 +130,7 @@ function scene_public_payload(?array $state = null): array
 {
     $state = $state ?? read_scene_state();
     $cue = (string) $state['cue'];
-    $definition = scene_cues()[$cue] ?? scene_cues()['standby'];
+    $definition = scene_cues()[$cue] ?? scene_cues()['restored'];
 
     return [
         'cue' => $cue,
@@ -168,5 +143,5 @@ function scene_public_payload(?array $state = null): array
 
 function scene_is_outage(?array $state = null): bool
 {
-    return in_array(($state ?? read_scene_state())['cue'], ['outage', 'recovery'], true);
+    return ($state ?? read_scene_state())['cue'] === 'outage';
 }

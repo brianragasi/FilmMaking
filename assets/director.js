@@ -7,24 +7,16 @@
   const cueScripts = window.ECOCART_DIRECTOR_CUES || {};
   const endpoint = root.dataset.sceneEndpoint || 'scene-state.php';
   const csrfToken = root.dataset.csrfToken || '';
-  const cueOrder = Object.keys(cueScripts);
   const cueButtons = [...document.querySelectorAll('[data-cue-button]')];
-  const scriptPanels = [...document.querySelectorAll('[data-cue-script]')];
   const errorNode = document.querySelector('[data-director-error]');
   const saveState = document.querySelector('[data-save-state]');
-  const takeClock = document.querySelector('[data-take-clock]');
-  let currentState = JSON.parse(root.dataset.initialState || '{"cue":"standby","revision":0}');
-  let cueChangedAt = Date.parse(currentState.updated_at || new Date().toISOString());
+  let currentState = JSON.parse(root.dataset.initialState || '{"cue":"restored","revision":0}');
   let requestPending = false;
 
   const nodes = {
     title: document.querySelector('[data-current-title]'),
     summary: document.querySelector('[data-current-summary]'),
     number: document.querySelector('[data-current-number]'),
-    progress: document.querySelector('[data-cue-progress]'),
-    customer: document.querySelector('[data-screen-customer]'),
-    admin: document.querySelector('[data-screen-admin]'),
-    attacker: document.querySelector('[data-screen-attacker]'),
     icon: document.querySelector('[data-current-icon]'),
   };
 
@@ -52,31 +44,22 @@
   }
 
   function applyState(state) {
-    const cue = cueScripts[state.cue] ? state.cue : 'standby';
+    const cue = cueScripts[state.cue] ? state.cue : 'restored';
     const script = cueScripts[cue];
-    const index = Math.max(0, cueOrder.indexOf(cue));
     currentState = { ...state, cue };
-    cueChangedAt = Date.parse(state.updated_at || new Date().toISOString());
 
     nodes.title.textContent = script.title;
-    nodes.summary.textContent = script.short || script.timing;
+    nodes.summary.textContent = script.result;
     nodes.number.textContent = script.number;
-    nodes.progress.textContent = `${index + 1} / ${cueOrder.length}`;
-    nodes.customer.textContent = script.customer;
-    nodes.admin.textContent = script.admin;
-    nodes.attacker.textContent = script.attacker;
     nodes.icon.innerHTML = `<i data-lucide="${script.icon}" class="h-6 w-6"></i>`;
 
     cueButtons.forEach((button) => {
       const active = button.dataset.cueButton === cue;
-      button.classList.toggle('border-rose-400/40', active);
-      button.classList.toggle('bg-rose-500/10', active);
-      button.classList.toggle('text-white', active);
-      button.setAttribute('aria-current', active ? 'step' : 'false');
-    });
-
-    scriptPanels.forEach((panel) => {
-      panel.classList.toggle('hidden', panel.dataset.cueScript !== cue);
+      button.classList.toggle('ring-2', active);
+      button.classList.toggle('ring-white/70', active);
+      button.classList.toggle('ring-offset-2', active);
+      button.classList.toggle('ring-offset-[#151820]', active);
+      button.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
 
     setSaveState('Synced', 'ok');
@@ -86,12 +69,12 @@
   }
 
   async function setCue(cue) {
-    if (requestPending || !cueScripts[cue]) {
+    if (requestPending || !cueScripts[cue] || cue === currentState.cue) {
       return;
     }
 
     requestPending = true;
-    setSaveState('Sending cue', 'saving');
+    setSaveState('Sending', 'saving');
     cueButtons.forEach((button) => {
       button.disabled = true;
     });
@@ -107,12 +90,12 @@
       });
       const payload = await response.json();
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.message || 'The cue could not be sent.');
+        throw new Error(payload.message || 'The website control could not be sent.');
       }
       applyState(payload.state);
     } catch (error) {
       setSaveState('Not synced', 'error');
-      showError(error instanceof Error ? error.message : 'The cue could not be sent.');
+      showError(error instanceof Error ? error.message : 'The website control could not be sent.');
     } finally {
       requestPending = false;
       cueButtons.forEach((button) => {
@@ -138,7 +121,7 @@
         applyState(state);
       }
     } catch {
-      // The last confirmed cue remains visible during brief hosting interruptions.
+      // Keep the last confirmed website state during a brief connection loss.
     }
   }
 
@@ -146,15 +129,6 @@
     button.addEventListener('click', () => setCue(button.dataset.cueButton));
   });
 
-  document.querySelector('[data-emergency-reset]')?.addEventListener('click', () => setCue('restored'));
-
-  window.setInterval(() => {
-    const elapsed = Math.max(0, Math.floor((Date.now() - cueChangedAt) / 1000));
-    const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
-    const seconds = String(elapsed % 60).padStart(2, '0');
-    takeClock.textContent = `${minutes}:${seconds}`;
-  }, 1000);
-
   applyState(currentState);
-  window.setInterval(pollState, 4000);
+  window.setInterval(pollState, 5000);
 })();

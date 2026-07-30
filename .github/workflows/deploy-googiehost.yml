@@ -38,6 +38,8 @@ jobs:
         run: |
           node --check assets/app-public.js
           node --check assets/app.js
+          node --check assets/director.js
+          node --check assets/scene-client.js
 
       - name: Create production database config
         env:
@@ -54,6 +56,11 @@ jobs:
           test -n "$DB_NAME"
           test -n "$DB_USER"
           test -n "$DB_PASSWORD"
+          test -n "$ADMIN_EMAIL"
+          test -n "$ADMIN_PASSWORD"
+          test -n "$DIRECTOR_EMAIL"
+          test -n "$DIRECTOR_PASSWORD"
+          test "${ADMIN_EMAIL,,}" != "${DIRECTOR_EMAIL,,}"
           php -r '
           $config = [
               "host" => getenv("DB_HOST"),

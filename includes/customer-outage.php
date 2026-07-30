@@ -20,7 +20,7 @@ header('X-Robots-Tag: noindex, nofollow');
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="min-h-screen bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-poll="false" data-scene-cue="<?= htmlspecialchars((string) $scenePayload['cue']) ?>" data-scene-revision="<?= (int) $scenePayload['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $scenePayload['updated_at']) ?>">
+<body class="min-h-screen bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-view="outage" data-scene-cue="<?= htmlspecialchars((string) $scenePayload['cue']) ?>" data-scene-revision="<?= (int) $scenePayload['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $scenePayload['updated_at']) ?>">
     <div class="flex min-h-screen flex-col">
         <header class="border-b border-slate-200 bg-white">
             <div class="mx-auto flex min-h-[72px] w-[min(1180px,calc(100%_-_32px))] items-center justify-between">
@@ -48,15 +48,9 @@ header('X-Robots-Tag: noindex, nofollow');
                     <h1 class="mt-2 max-w-2xl text-4xl font-black leading-tight sm:text-6xl">Please try again.</h1>
                     <p class="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">EcoCart could not respond to your request. Your cart is still saved.</p>
 
-                    <div class="mt-8 flex flex-wrap items-center gap-3">
-                        <button class="btn border-0 bg-slate-950 px-6 text-white hover:bg-rose-600" type="button" onclick="window.location.reload()">
-                            <i data-lucide="refresh-cw" class="h-4 w-4"></i>
-                            Try again
-                        </button>
-                        <a class="btn border-slate-300 bg-white text-slate-700 hover:border-slate-950" href="index.php">
-                            <i data-lucide="house" class="h-4 w-4"></i>
-                            Return home
-                        </a>
+                    <div class="mt-8 inline-flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600">
+                        <span class="loading loading-dots loading-sm text-rose-600"></span>
+                        Waiting for EcoCart to return
                     </div>
                 </div>
 
@@ -78,7 +72,7 @@ header('X-Robots-Tag: noindex, nofollow');
                         <div class="bg-[#111827] p-4"><p class="text-[10px] font-bold uppercase text-slate-500">Order</p><p class="mt-2 text-sm font-black text-slate-300">Not placed</p></div>
                         <div class="bg-[#111827] p-4"><p class="text-[10px] font-bold uppercase text-slate-500">Reference</p><p class="mt-2 font-mono text-sm font-black text-rose-300">ECT-503</p></div>
                     </div>
-                    <p class="mt-8 border-t border-slate-800 pt-5 text-xs leading-5 text-slate-500">Wait a moment, then refresh this page to try again.</p>
+                    <p class="mt-8 border-t border-slate-800 pt-5 text-xs leading-5 text-slate-500">This screen will return automatically when EcoCart is available.</p>
                 </div>
             </section>
         </main>

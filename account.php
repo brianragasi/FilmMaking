@@ -9,7 +9,7 @@ auth_no_store();
 $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['name']);
 
 $role = (string) ($user['role'] ?? 'customer');
-$isAdmin = in_array($role, ['admin', 'director'], true);
+$isAdmin = $role === 'admin';
 $roleLabel = match ($role) {
     'director' => 'Production director',
     'admin' => 'Operations admin',
@@ -72,7 +72,7 @@ if ($pdo = db()) {
                 <span class="text-2xl font-black">Eco<span class="text-rose-600">Cart.</span></span>
             </a>
             <nav class="ml-auto flex items-center gap-2" aria-label="Account actions">
-                <?php if ($isAdmin): ?>
+                <?php if ($role === 'admin'): ?>
                     <a class="btn btn-sm border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100" href="admin.php">
                         <i data-lucide="activity" class="h-4 w-4"></i> Operations
                     </a>

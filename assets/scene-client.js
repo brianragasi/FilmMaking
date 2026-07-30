@@ -5,34 +5,61 @@
   }
 
   const endpoint = root.dataset.sceneEndpoint || 'scene-state.php';
+  const view = root.dataset.sceneView || 'screen';
+  const customerView = ['storefront', 'checkout', 'outage'].includes(view);
   let state = {
-    cue: root.dataset.sceneCue || 'standby',
+    cue: root.dataset.sceneCue || 'restored',
     revision: Number(root.dataset.sceneRevision || 0),
     updated_at: root.dataset.sceneUpdated || '',
   };
 
-  function systemStateForCue(cue) {
-    if (cue === 'recovery') {
-      return 'filtering';
+  function showSaleTakeover(revision) {
+    const takeover = document.querySelector('[data-sale-takeover]');
+    if (!takeover) {
+      return;
     }
-    if (['traffic_rising', 'checkout_loading', 'outage'].includes(cue)) {
-      return 'attack';
+
+    const storageKey = `ecocart_sale_takeover_${revision}`;
+    if (sessionStorage.getItem(storageKey)) {
+      return;
     }
-    return 'healthy';
+    sessionStorage.setItem(storageKey, 'shown');
+    takeover.classList.remove('hidden');
+    requestAnimationFrame(() => takeover.classList.add('is-visible'));
+    window.setTimeout(() => {
+      takeover.classList.remove('is-visible');
+      window.setTimeout(() => takeover.classList.add('hidden'), 450);
+    }, 2800);
   }
 
   function applyState(nextState) {
+    const previousCue = state.cue;
     state = { ...state, ...nextState };
     root.dataset.sceneCue = state.cue;
     root.dataset.sceneRevision = String(state.revision || 0);
-    localStorage.setItem('ecocart_system_state', systemStateForCue(state.cue));
+    localStorage.setItem('ecocart_system_state', state.cue === 'outage' ? 'attack' : 'healthy');
 
-    const loadingOverlay = document.querySelector('[data-scene-loading]');
-    const holdCheckout = ['checkout_loading', 'outage'].includes(state.cue);
-    loadingOverlay?.classList.toggle('hidden', !holdCheckout);
+    if (customerView) {
+      if (view !== 'outage' && state.cue === 'outage') {
+        window.location.reload();
+        return;
+      }
+      if (view === 'outage' && state.cue !== 'outage') {
+        window.location.reload();
+        return;
+      }
+    }
 
-    const restoredNotice = document.querySelector('[data-scene-restored]');
-    restoredNotice?.classList.toggle('hidden', state.cue !== 'restored');
+    const ribbonText = document.querySelector('[data-sale-ribbon-text]');
+    if (ribbonText) {
+      ribbonText.textContent = state.cue === 'sale_live'
+        ? 'SALE IS LIVE NOW - UP TO 70% OFF'
+        : 'Big Blowout Sale: up to 70% off selected essentials';
+    }
+
+    if (state.cue === 'sale_live' && (previousCue !== 'sale_live' || Number(nextState.revision) > 0)) {
+      showSaleTakeover(state.revision);
+    }
 
     window.dispatchEvent(new CustomEvent('ecocart:scenechange', {
       detail: state,
@@ -49,24 +76,16 @@
         return;
       }
       const nextState = await response.json();
-      applyState(nextState);
+      if (Number(nextState.revision) !== Number(state.revision)) {
+        applyState(nextState);
+      }
     } catch {
-      // A filming screen keeps its last confirmed cue during a brief connection loss.
+      // Keep the last confirmed filming state during a brief connection loss.
     }
   }
 
-  document.addEventListener('submit', (event) => {
-    if (
-      event.target.matches('[data-checkout-form]')
-      && ['checkout_loading', 'outage', 'recovery'].includes(state.cue)
-    ) {
-      event.preventDefault();
-      document.querySelector('[data-scene-loading]')?.classList.remove('hidden');
-    }
-  }, true);
-
   document.addEventListener('DOMContentLoaded', () => applyState(state));
   if (root.dataset.scenePoll !== 'false') {
-    window.setInterval(pollState, 3500);
+    window.setInterval(pollState, 4000);
   }
 })();

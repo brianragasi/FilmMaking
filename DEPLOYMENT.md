@@ -74,7 +74,15 @@ After adding the Director secrets and completing a deployment, sign in through:
 http://ecocart.whf.bz/login.php?next=director.php
 ```
 
-The Director Console controls only the fictional filming state. It does not stop GoogieHost or generate traffic. Customer pages read the current cue when they load or refresh, while the operations screen checks it periodically. Non-standby cues automatically expire after 15 minutes.
+The Director account is separate from the operations-admin account. An admin cannot open the Director Remote, and a Director cannot open the operations dashboard.
+
+The Director Remote has only three filming controls:
+
+- **Open website** returns customer screens to EcoCart.
+- **Start sale** displays the live-sale takeover on customer screens.
+- **Shut down website** switches customer screens to the fictional server-error scene.
+
+Customer screens check the lightweight scene endpoint periodically and change automatically. The controls never stop GoogieHost and never generate traffic.
 
 ## Normal Update Flow
 

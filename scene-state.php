@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $operator = current_user();
-if (!$operator || !in_array((string) ($operator['role'] ?? ''), ['admin', 'director'], true)) {
+if (!$operator || (string) ($operator['role'] ?? '') !== 'director') {
     http_response_code(401);
     echo json_encode(['ok' => false, 'message' => 'Director sign-in required.']);
     exit;

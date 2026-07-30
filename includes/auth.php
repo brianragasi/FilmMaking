@@ -403,12 +403,12 @@ function require_role(array $roles): array
 
 function require_admin(): array
 {
-    return require_role(['admin', 'director']);
+    return require_role(['admin']);
 }
 
 function require_director(): array
 {
-    return require_role(['director', 'admin']);
+    return require_role(['director']);
 }
 
 function auth_no_store(): void
