@@ -8,7 +8,13 @@ $user = require_login();
 auth_no_store();
 $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['name']);
 
-$isAdmin = ($user['role'] ?? '') === 'admin';
+$role = (string) ($user['role'] ?? 'customer');
+$isAdmin = in_array($role, ['admin', 'director'], true);
+$roleLabel = match ($role) {
+    'director' => 'Production director',
+    'admin' => 'Operations admin',
+    default => 'Customer',
+};
 $memberSince = null;
 $orderCount = 0;
 $orderSpend = 0.0;
@@ -66,9 +72,14 @@ if ($pdo = db()) {
                 <span class="text-2xl font-black">Eco<span class="text-rose-600">Cart.</span></span>
             </a>
             <nav class="ml-auto flex items-center gap-2" aria-label="Account actions">
-                <?php if (($user['role'] ?? '') === 'admin'): ?>
+                <?php if ($isAdmin): ?>
                     <a class="btn btn-sm border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100" href="admin.php">
                         <i data-lucide="activity" class="h-4 w-4"></i> Operations
+                    </a>
+                <?php endif; ?>
+                <?php if ($role === 'director'): ?>
+                    <a class="btn btn-sm border-rose-200 bg-rose-50 text-rose-800 hover:bg-rose-100" href="director.php">
+                        <i data-lucide="clapperboard" class="h-4 w-4"></i> Director
                     </a>
                 <?php endif; ?>
                 <a class="btn btn-sm border-slate-200 bg-white text-slate-700 hover:border-slate-950" href="index.php">
@@ -104,7 +115,7 @@ if ($pdo = db()) {
                     <p class="text-xs font-black uppercase text-slate-400">Signed in as</p>
                     <p class="mt-2 break-all text-sm font-bold"><?= htmlspecialchars((string) $user['email']) ?></p>
                     <p class="mt-4 inline-flex rounded-full bg-emerald-400/12 px-3 py-1 text-xs font-black uppercase text-emerald-300">
-                        <?= ($user['role'] ?? '') === 'admin' ? 'Operations admin' : 'Customer' ?>
+                        <?= htmlspecialchars($roleLabel) ?>
                     </p>
                 </div>
             </div>
@@ -137,7 +148,7 @@ if ($pdo = db()) {
                     <dl class="mt-5 divide-y divide-slate-100 border-y border-slate-100">
                         <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Name</dt><dd class="font-bold"><?= htmlspecialchars((string) $user['name']) ?></dd></div>
                         <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Email</dt><dd class="break-all font-bold"><?= htmlspecialchars((string) $user['email']) ?></dd></div>
-                        <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Account type</dt><dd class="font-bold"><?= ($user['role'] ?? '') === 'admin' ? 'Operations administrator' : 'Customer' ?></dd></div>
+                        <div class="grid gap-1 py-3 sm:grid-cols-[132px_1fr]"><dt class="text-xs font-black uppercase text-slate-400">Account type</dt><dd class="font-bold"><?= htmlspecialchars($roleLabel) ?></dd></div>
                     </dl>
                 </div>
 

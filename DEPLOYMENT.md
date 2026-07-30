@@ -33,6 +33,10 @@ Create these secrets:
 | `GOOGIEHOST_DB_NAME` | Database name shown by GoogieHost |
 | `GOOGIEHOST_DB_USER` | Database username shown by GoogieHost |
 | `GOOGIEHOST_DB_PASSWORD` | Database password after you rotate it |
+| `GOOGIEHOST_ADMIN_EMAIL` | Email used by the server-admin actor |
+| `GOOGIEHOST_ADMIN_PASSWORD` | Strong password used by the server-admin actor |
+| `GOOGIEHOST_DIRECTOR_EMAIL` | Separate email used to open the Director Console |
+| `GOOGIEHOST_DIRECTOR_PASSWORD` | Strong password used only by the Director |
 
 Never commit the FTP password to GitHub or paste it into a PHP file.
 
@@ -61,6 +65,16 @@ The database is not created by FTP deployment:
 4. Push to `main` and let the workflow upload the generated `includes/config.local.php`.
 
 `includes/config.local.php` is generated during deployment and is still excluded from Git, so future pushes will not expose the production password.
+
+## Director Console
+
+After adding the Director secrets and completing a deployment, sign in through:
+
+```text
+http://ecocart.whf.bz/login.php?next=director.php
+```
+
+The Director Console controls only the fictional filming state. It does not stop GoogieHost or generate traffic. Customer pages read the current cue when they load or refresh, while the operations screen checks it periodically. Non-standby cues automatically expire after 15 minutes.
 
 ## Normal Update Flow
 

@@ -87,41 +87,71 @@ function csrf_is_valid(?string $token): bool
         && hash_equals((string) $_SESSION['csrf_token'], $token);
 }
 
-function configured_admin(): ?array
+function configured_account(string $role): ?array
 {
-    static $admin = null;
-    static $loaded = false;
+    static $accounts = [];
+    static $configLoaded = false;
+    static $loadedConfig = [];
 
-    if ($loaded) {
-        return $admin;
+    if (array_key_exists($role, $accounts)) {
+        return $accounts[$role];
     }
 
-    $loaded = true;
-    $localConfigPath = __DIR__ . '/config.local.php';
-    if (!is_file($localConfigPath)) {
-        return null;
+    if (!$configLoaded) {
+        $configLoaded = true;
+        $localConfigPath = __DIR__ . '/config.local.php';
+        if (is_file($localConfigPath)) {
+            $config = require $localConfigPath;
+            if (is_array($config)) {
+                $loadedConfig = $config;
+            }
+        }
     }
 
-    $loadedConfig = require $localConfigPath;
-    if (!is_array($loadedConfig)) {
-        return null;
-    }
-
-    $email = strtolower(trim((string) ($loadedConfig['admin_email'] ?? '')));
-    $passwordHash = (string) ($loadedConfig['admin_password_hash'] ?? '');
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $passwordHash === '') {
-        return null;
-    }
-
-    $admin = [
-        'id' => 1,
-        'name' => 'EcoCart Admin',
-        'email' => $email,
-        'password_hash' => $passwordHash,
-        'role' => 'admin',
+    $definitions = [
+        'admin' => [
+            'email_key' => 'admin_email',
+            'hash_key' => 'admin_password_hash',
+            'name' => 'EcoCart Admin',
+            'id' => -1,
+        ],
+        'director' => [
+            'email_key' => 'director_email',
+            'hash_key' => 'director_password_hash',
+            'name' => 'Production Director',
+            'id' => -2,
+        ],
     ];
 
-    return $admin;
+    if (!isset($definitions[$role])) {
+        return $accounts[$role] = null;
+    }
+
+    $definition = $definitions[$role];
+    $email = strtolower(trim((string) ($loadedConfig[$definition['email_key']] ?? '')));
+    $passwordHash = (string) ($loadedConfig[$definition['hash_key']] ?? '');
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $passwordHash === '') {
+        return $accounts[$role] = null;
+    }
+
+    return $accounts[$role] = [
+        'id' => $definition['id'],
+        'name' => $definition['name'],
+        'email' => $email,
+        'password_hash' => $passwordHash,
+        'role' => $role,
+        'source' => 'configured',
+    ];
+}
+
+function configured_admin(): ?array
+{
+    return configured_account('admin');
+}
+
+function configured_director(): ?array
+{
+    return configured_account('director');
 }
 
 function current_user(): ?array
@@ -162,6 +192,7 @@ function sign_in_user(array $user): void
         'name' => (string) $user['name'],
         'email' => (string) $user['email'],
         'role' => (string) ($user['role'] ?? 'customer'),
+        'source' => (string) ($user['source'] ?? 'database'),
     ];
     unset($_SESSION['login_attempts']);
 }
@@ -206,10 +237,16 @@ function attempt_login(string $email, string $password): bool
         }
     }
 
-    $admin = configured_admin();
-    if ($admin && hash_equals($admin['email'], $normalizedEmail) && password_verify($password, (string) $admin['password_hash'])) {
-        sign_in_user($admin);
-        return true;
+    foreach (['admin', 'director'] as $configuredRole) {
+        $configuredUser = configured_account($configuredRole);
+        if (
+            $configuredUser
+            && hash_equals($configuredUser['email'], $normalizedEmail)
+            && password_verify($password, (string) $configuredUser['password_hash'])
+        ) {
+            sign_in_user($configuredUser);
+            return true;
+        }
     }
 
     record_failed_login();
@@ -277,7 +314,7 @@ function sign_out_user(): void
 
 function safe_next_path(?string $next): string
 {
-    $allowed = ['index.php', 'account.php', 'checkout.php', 'admin.php'];
+    $allowed = ['index.php', 'account.php', 'checkout.php', 'admin.php', 'director.php', 'attacker-terminal.php'];
     $candidate = basename((string) $next);
 
     return in_array($candidate, $allowed, true) ? $candidate : 'account.php';
@@ -285,7 +322,11 @@ function safe_next_path(?string $next): string
 
 function user_home(array $user): string
 {
-    return ($user['role'] ?? 'customer') === 'admin' ? 'admin.php' : 'account.php';
+    return match ($user['role'] ?? 'customer') {
+        'director' => 'director.php',
+        'admin' => 'admin.php',
+        default => 'account.php',
+    };
 }
 
 function require_login(): array
@@ -300,9 +341,28 @@ function require_login(): array
     exit;
 }
 
-function require_admin(): array
+function refresh_authenticated_user(array $user): array
 {
-    $user = require_login();
+    $configuredRole = (string) ($user['role'] ?? '');
+    $configuredUser = configured_account($configuredRole);
+    if (
+        ($user['source'] ?? '') === 'configured'
+        || ($configuredUser && hash_equals((string) $configuredUser['email'], strtolower((string) $user['email'])))
+    ) {
+        if ($configuredUser) {
+            $_SESSION['user'] = [
+                'id' => (int) $configuredUser['id'],
+                'name' => (string) $configuredUser['name'],
+                'email' => (string) $configuredUser['email'],
+                'role' => (string) $configuredUser['role'],
+                'source' => 'configured',
+            ];
+            return $_SESSION['user'];
+        }
+
+        return $user;
+    }
+
     $pdo = db();
 
     if ($pdo) {
@@ -317,24 +377,38 @@ function require_admin(): array
                     'name' => (string) $freshUser['name'],
                     'email' => (string) $freshUser['email'],
                     'role' => (string) $freshUser['role'],
+                    'source' => 'database',
                 ];
                 $user = $_SESSION['user'];
-            } else {
-                $user['role'] = 'customer';
             }
         } catch (Throwable $error) {
-            $user['role'] = 'customer';
+            return $user;
         }
-    } else {
-        $user['role'] = 'customer';
     }
 
-    if (($user['role'] ?? '') !== 'admin') {
+    return $user;
+}
+
+function require_role(array $roles): array
+{
+    $user = refresh_authenticated_user(require_login());
+
+    if (!in_array((string) ($user['role'] ?? ''), $roles, true)) {
         header('Location: account.php?denied=operations');
         exit;
     }
 
     return $user;
+}
+
+function require_admin(): array
+{
+    return require_role(['admin', 'director']);
+}
+
+function require_director(): array
+{
+    return require_role(['director', 'admin']);
 }
 
 function auth_no_store(): void

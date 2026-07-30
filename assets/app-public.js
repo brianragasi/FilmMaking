@@ -1205,6 +1205,23 @@ function bootTerminal() {
     setInterval(updateClock, 1000);
   }
 
+  window.addEventListener('ecocart:scenechange', (event) => {
+    const cue = event.detail?.cue;
+    if (cue === 'outage' && ['idle', 'monitoring'].includes(stage)) {
+      clearInterval(incidentTimer);
+      clearInterval(idleTimer);
+      startAttackTelemetry();
+      return;
+    }
+    if (cue === 'recovery') {
+      setSystemState('filtering');
+      return;
+    }
+    if (cue === 'restored') {
+      setSystemState('healthy');
+    }
+  });
+
   resetOperations();
 }
 

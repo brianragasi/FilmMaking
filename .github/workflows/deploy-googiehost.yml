@@ -47,6 +47,8 @@ jobs:
           DB_PASSWORD: ${{ secrets.GOOGIEHOST_DB_PASSWORD }}
           ADMIN_EMAIL: ${{ secrets.GOOGIEHOST_ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.GOOGIEHOST_ADMIN_PASSWORD }}
+          DIRECTOR_EMAIL: ${{ secrets.GOOGIEHOST_DIRECTOR_EMAIL }}
+          DIRECTOR_PASSWORD: ${{ secrets.GOOGIEHOST_DIRECTOR_PASSWORD }}
         run: |
           test -n "$DB_HOST"
           test -n "$DB_NAME"
@@ -62,6 +64,10 @@ jobs:
           if (getenv("ADMIN_EMAIL") && getenv("ADMIN_PASSWORD")) {
               $config["admin_email"] = strtolower(trim(getenv("ADMIN_EMAIL")));
               $config["admin_password_hash"] = password_hash(getenv("ADMIN_PASSWORD"), PASSWORD_DEFAULT);
+          }
+          if (getenv("DIRECTOR_EMAIL") && getenv("DIRECTOR_PASSWORD")) {
+              $config["director_email"] = strtolower(trim(getenv("DIRECTOR_EMAIL")));
+              $config["director_password_hash"] = password_hash(getenv("DIRECTOR_PASSWORD"), PASSWORD_DEFAULT);
           }
           file_put_contents("includes/config.local.php", "<?php\nreturn " . var_export($config, true) . ";\n");
           '
@@ -103,3 +109,5 @@ jobs:
             **/index.html
             **/main.js
             **/preload.js
+            **/includes/order-queue.jsonl
+            **/includes/scene-state.json

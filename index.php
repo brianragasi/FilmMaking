@@ -3,6 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/products.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/scene.php';
+
+$sceneState = read_scene_state();
+if (scene_is_outage($sceneState)) {
+    require __DIR__ . '/includes/customer-outage.php';
+    exit;
+}
 
 $products = products();
 $currentUser = current_user();
@@ -48,7 +55,7 @@ $storyPicks = array_slice($products, 0, 6);
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="bg-[#f4f5f7] text-slate-950 antialiased">
+<body class="bg-[#f4f5f7] text-slate-950 antialiased" data-scene-client data-scene-poll="false" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
     <div class="bg-[#e11d48] text-white">
         <div class="app-shell flex min-h-9 items-center justify-between gap-4 text-[11px] font-bold">
             <div class="hidden items-center gap-5 sm:flex">
@@ -450,6 +457,14 @@ $storyPicks = array_slice($products, 0, 6);
         </div>
     </div>
 
+    <div class="pointer-events-none fixed inset-x-0 top-24 z-50 flex justify-center px-4">
+        <div class="hidden items-center gap-3 rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800 shadow-2xl" data-scene-restored>
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-emerald-600 text-white"><i data-lucide="circle-check-big" class="h-4 w-4"></i></span>
+            EcoCart services have been restored. Thank you for your patience.
+        </div>
+    </div>
+
+    <script src="assets/scene-client.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/scene-client.js')) ?>"></script>
     <script src="assets/app-public.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app-public.js')) ?>"></script>
 </body>
 </html>

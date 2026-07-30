@@ -3,6 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/products.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/scene.php';
+
+$sceneState = read_scene_state();
+if (scene_is_outage($sceneState)) {
+    require __DIR__ . '/includes/customer-outage.php';
+    exit;
+}
 
 $errors = [];
 $success = false;
@@ -147,7 +154,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950">
+<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-poll="false" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+    <div class="fixed inset-0 z-[100] hidden bg-white" data-scene-loading>
+        <div class="flex min-h-screen flex-col">
+            <header class="border-b border-slate-200">
+                <div class="app-shell flex min-h-[72px] items-center">
+                    <span class="flex items-center gap-2">
+                        <span class="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-white"><i data-lucide="leaf" class="h-5 w-5"></i></span>
+                        <span class="text-2xl font-black">Eco<span class="text-rose-600">Cart.</span></span>
+                    </span>
+                </div>
+            </header>
+            <main class="grid flex-1 place-items-center p-6 text-center">
+                <div>
+                    <span class="loading loading-spinner loading-lg text-rose-600"></span>
+                    <h1 class="mt-6 text-2xl font-black sm:text-3xl">Connecting to checkout</h1>
+                    <p class="mt-2 text-sm text-slate-500">Please keep this page open while we process your request.</p>
+                </div>
+            </main>
+        </div>
+    </div>
     <div class="bg-rose-600 text-white">
         <div class="app-shell flex min-h-8 items-center justify-center gap-2 text-center text-[10px] font-black uppercase">
             <i data-lucide="tag" class="h-3.5 w-3.5"></i>
@@ -421,6 +447,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </footer>
 
+    <div class="pointer-events-none fixed inset-x-0 top-24 z-50 flex justify-center px-4">
+        <div class="hidden items-center gap-3 rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800 shadow-2xl" data-scene-restored>
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-emerald-600 text-white"><i data-lucide="circle-check-big" class="h-4 w-4"></i></span>
+            EcoCart services have been restored. Thank you for your patience.
+        </div>
+    </div>
+
+    <script src="assets/scene-client.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/scene-client.js')) ?>"></script>
     <script src="assets/app-public.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app-public.js')) ?>"></script>
 </body>
 </html>

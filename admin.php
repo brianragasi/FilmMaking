@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/products.php';
+require_once __DIR__ . '/includes/scene.php';
 
 $operator = require_admin();
 auth_no_store();
+$sceneState = read_scene_state();
 
 $orderCount = 0;
 $orderTotal = 0.0;
@@ -46,7 +48,7 @@ $customerImpact = [
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="ops-body min-h-screen bg-[#07101c] text-slate-100">
+<body class="ops-body min-h-screen bg-[#07101c] text-slate-100" data-scene-client data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
     <header class="border-b border-slate-700/70 bg-[#091421]">
         <div class="app-shell flex min-h-[68px] items-center gap-4">
             <div class="flex items-center gap-3">
@@ -347,6 +349,7 @@ $customerImpact = [
         </section>
     </main>
 
+    <script src="assets/scene-client.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/scene-client.js')) ?>"></script>
     <script src="assets/app-public.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/app-public.js')) ?>"></script>
 </body>
 </html>
