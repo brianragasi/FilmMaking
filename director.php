@@ -3,11 +3,22 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/scene.php';
+require_once __DIR__ . '/includes/discussions.php';
 
 $director = require_director();
 auth_no_store();
 
 $sceneState = read_scene_state();
+$recentDiscussions = recent_product_discussions();
+$customerProfiles = director_customer_profiles();
+$customerNotice = isset($_SESSION['director_customer_notice']) && is_array($_SESSION['director_customer_notice'])
+    ? $_SESSION['director_customer_notice']
+    : null;
+unset($_SESSION['director_customer_notice']);
+$directorNotice = isset($_SESSION['director_notice']) && is_array($_SESSION['director_notice'])
+    ? $_SESSION['director_notice']
+    : null;
+unset($_SESSION['director_notice']);
 $cueOrder = ['restored', 'sale_live', 'outage'];
 $cueScripts = [
     'restored' => [
@@ -159,6 +170,108 @@ $currentCue = isset($cueScripts[$sceneState['cue']])
                 </div>
             </aside>
         </div>
+
+        <details class="mt-5 overflow-hidden rounded-lg border border-white/10 bg-[#151820]" id="moderation" <?= isset($_GET['moderation']) || $directorNotice ? 'open' : '' ?>>
+            <summary class="flex cursor-pointer list-none items-center gap-4 p-5 sm:p-6">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300"><i data-lucide="messages-square" class="h-5 w-5"></i></span>
+                <span class="min-w-0 flex-1">
+                    <strong class="block font-black">Discussion moderation</strong>
+                    <span class="mt-1 block text-xs text-slate-500">Review and remove customer comments when needed.</span>
+                </span>
+                <span class="rounded bg-white/5 px-2.5 py-1 text-xs font-black text-slate-300"><?= count($recentDiscussions) ?></span>
+                <i data-lucide="chevron-down" class="h-5 w-5 text-slate-500"></i>
+            </summary>
+
+            <div class="border-t border-white/10 p-4 sm:p-5">
+                <?php if ($directorNotice): ?>
+                    <div class="mb-4 rounded-lg border p-3 text-sm font-bold <?= $directorNotice['tone'] === 'success' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-rose-400/25 bg-rose-400/10 text-rose-200' ?>" role="status"><?= htmlspecialchars((string) $directorNotice['message']) ?></div>
+                <?php endif; ?>
+
+                <?php if ($recentDiscussions): ?>
+                    <div class="grid gap-2">
+                        <?php foreach ($recentDiscussions as $comment): ?>
+                            <?php $commentAvatar = profile_avatar_url($comment); ?>
+                            <article class="flex flex-col gap-4 rounded-lg border border-white/10 bg-black/20 p-4 sm:flex-row sm:items-start">
+                                <span class="h-10 w-10 shrink-0 overflow-hidden rounded-lg text-sm font-black <?= htmlspecialchars(avatar_class((string) $comment['avatar_style'])) ?>"><?php if ($commentAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($commentAvatar) ?>" alt=""><?php else: ?><span class="grid h-full w-full place-items-center"><?= htmlspecialchars(profile_initial((string) $comment['author_name'])) ?></span><?php endif; ?></span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        <p class="text-sm font-black"><?= htmlspecialchars((string) $comment['author_name']) ?></p>
+                                        <span class="text-[10px] font-bold text-cyan-300"><?= htmlspecialchars((string) ($comment['product_name'] ?: 'Product #' . $comment['product_id'])) ?></span>
+                                        <span class="flex items-center text-amber-300"><?php for ($star = 1; $star <= 5; $star++): ?><i data-lucide="star" class="h-3 w-3 <?= (int) $comment['rating'] >= $star ? 'fill-current' : '' ?>"></i><?php endfor; ?></span>
+                                    </div>
+                                    <p class="mt-2 text-sm leading-6 text-slate-300"><?= nl2br(htmlspecialchars((string) $comment['body'])) ?></p>
+                                    <p class="mt-2 text-[10px] text-slate-600"><?= htmlspecialchars((string) $comment['author_email']) ?> &middot; <?= htmlspecialchars(date('M j, g:i A', strtotime((string) $comment['created_at']))) ?></p>
+                                </div>
+                                <form method="post" action="director-discussion-action.php" onsubmit="return confirm('Remove this comment from the storefront?');">
+                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                                    <input type="hidden" name="discussion_id" value="<?= (int) $comment['id'] ?>">
+                                    <button class="btn btn-sm w-full border-rose-400/25 bg-rose-400/10 text-rose-200 hover:border-rose-300 hover:bg-rose-400/20 sm:btn-square" type="submit" aria-label="Delete comment" title="Delete comment"><i data-lucide="trash-2" class="h-4 w-4"></i><span class="sm:hidden">Delete comment</span></button>
+                                </form>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="py-8 text-center"><i data-lucide="message-circle-off" class="mx-auto h-7 w-7 text-slate-600"></i><p class="mt-3 text-sm font-black">No comments to moderate.</p><p class="mt-1 text-xs text-slate-600">New product discussions will appear here.</p></div>
+                <?php endif; ?>
+            </div>
+        </details>
+
+        <details class="mt-5 overflow-hidden rounded-lg border border-white/10 bg-[#151820]" id="customers" <?= isset($_GET['customers']) || $customerNotice ? 'open' : '' ?>>
+            <summary class="flex cursor-pointer list-none items-center gap-4 p-5 sm:p-6">
+                <span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-violet-400/10 text-violet-300"><i data-lucide="users-round" class="h-5 w-5"></i></span>
+                <span class="min-w-0 flex-1"><strong class="block font-black">Customer safety</strong><span class="mt-1 block text-xs text-slate-500">Edit profiles, remove inappropriate photos, or suspend accounts.</span></span>
+                <span class="rounded bg-white/5 px-2.5 py-1 text-xs font-black text-slate-300"><?= count($customerProfiles) ?></span>
+                <i data-lucide="chevron-down" class="h-5 w-5 text-slate-500"></i>
+            </summary>
+
+            <div class="border-t border-white/10 p-4 sm:p-5">
+                <?php if ($customerNotice): ?><div class="mb-4 rounded-lg border p-3 text-sm font-bold <?= $customerNotice['tone'] === 'success' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-rose-400/25 bg-rose-400/10 text-rose-200' ?>" role="status"><?= htmlspecialchars((string) $customerNotice['message']) ?></div><?php endif; ?>
+
+                <div class="relative mb-4"><i data-lucide="search" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-500"></i><input class="input h-10 min-h-10 w-full rounded-lg border-white/10 bg-black/20 pl-10 text-sm text-white placeholder:text-slate-600 focus:border-violet-400 focus:outline-none" type="search" placeholder="Search customer name or email" data-customer-search></div>
+
+                <?php if ($customerProfiles): ?>
+                    <div class="grid gap-2" data-customer-list>
+                        <?php foreach ($customerProfiles as $customer): ?>
+                            <?php $customerAvatar = profile_avatar_url($customer); $isBanned = !empty($customer['is_banned']); ?>
+                            <article class="rounded-lg border <?= $isBanned ? 'border-rose-400/25 bg-rose-400/5' : 'border-white/10 bg-black/20' ?>" data-customer-item data-customer-search-text="<?= htmlspecialchars(strtolower((string) $customer['name'] . ' ' . (string) $customer['email'])) ?>">
+                                <div class="flex flex-wrap items-center gap-3 p-4">
+                                    <div class="h-11 w-11 shrink-0 overflow-hidden rounded-lg <?= htmlspecialchars(avatar_class((string) $customer['avatar_style'])) ?>"><?php if ($customerAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($customerAvatar) ?>" alt=""><?php else: ?><span class="grid h-full w-full place-items-center text-sm font-black"><?= htmlspecialchars(profile_initial((string) $customer['name'])) ?></span><?php endif; ?></div>
+                                    <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><p class="truncate text-sm font-black"><?= htmlspecialchars((string) $customer['name']) ?></p><span class="rounded px-2 py-0.5 text-[9px] font-black uppercase <?= $isBanned ? 'bg-rose-400/15 text-rose-300' : 'bg-emerald-400/10 text-emerald-300' ?>"><?= $isBanned ? 'Suspended' : 'Active' ?></span></div><p class="mt-0.5 truncate text-[11px] text-slate-500"><?= htmlspecialchars((string) $customer['email']) ?></p></div>
+                                    <div class="hidden gap-5 text-center sm:flex"><div><p class="text-sm font-black"><?= (int) $customer['order_count'] ?></p><p class="text-[9px] font-bold uppercase text-slate-600">Orders</p></div><div><p class="text-sm font-black"><?= (int) $customer['comment_count'] ?></p><p class="text-[9px] font-bold uppercase text-slate-600">Comments</p></div></div>
+                                    <button class="btn btn-sm border-white/10 bg-white/5 text-slate-300 hover:border-violet-400" type="button" data-customer-toggle><i data-lucide="user-round-cog" class="h-4 w-4"></i> Manage</button>
+                                </div>
+
+                                <div class="hidden border-t border-white/10 p-4" data-customer-editor>
+                                    <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_290px]">
+                                        <form class="grid gap-3 sm:grid-cols-2" method="post" action="director-customer-action.php">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>"><input type="hidden" name="customer_id" value="<?= (int) $customer['id'] ?>"><input type="hidden" name="action" value="save">
+                                            <label class="block"><span class="mb-1 block text-[10px] font-black uppercase text-slate-500">Display name</span><input class="input h-10 min-h-10 w-full rounded-lg border-white/10 bg-black/20 text-sm text-white" name="name" maxlength="120" value="<?= htmlspecialchars((string) $customer['name']) ?>" required></label>
+                                            <label class="block"><span class="mb-1 block text-[10px] font-black uppercase text-slate-500">Profile color</span><select class="select h-10 min-h-10 w-full rounded-lg border-white/10 bg-[#11141a] text-sm text-white" name="avatar_style"><?php foreach (avatar_styles() as $key => $style): ?><option value="<?= htmlspecialchars($key) ?>" <?= $customer['avatar_style'] === $key ? 'selected' : '' ?>><?= htmlspecialchars($style['label']) ?></option><?php endforeach; ?></select></label>
+                                            <label class="block sm:col-span-2"><span class="mb-1 block text-[10px] font-black uppercase text-slate-500">Profile note</span><textarea class="textarea min-h-20 w-full resize-none rounded-lg border-white/10 bg-black/20 text-sm text-white" name="bio" maxlength="180"><?= htmlspecialchars((string) $customer['bio']) ?></textarea></label>
+                                            <button class="btn btn-sm w-fit border-violet-400/30 bg-violet-400/10 text-violet-200 hover:bg-violet-400/20 sm:col-span-2" type="submit"><i data-lucide="save" class="h-4 w-4"></i> Save profile edits</button>
+                                        </form>
+
+                                        <div class="rounded-lg border border-white/10 bg-black/20 p-4">
+                                            <p class="text-[10px] font-black uppercase text-slate-500">Safety actions</p>
+                                            <?php if ($customerAvatar): ?><form class="mt-3" method="post" action="director-customer-action.php" onsubmit="return confirm('Remove this customer profile picture?');"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>"><input type="hidden" name="customer_id" value="<?= (int) $customer['id'] ?>"><input type="hidden" name="action" value="remove_photo"><button class="btn btn-sm w-full border-amber-400/25 bg-amber-400/10 text-amber-200" type="submit"><i data-lucide="image-off" class="h-4 w-4"></i> Remove profile photo</button></form><?php endif; ?>
+                                            <?php if ($isBanned): ?>
+                                                <p class="mt-3 rounded-lg bg-rose-400/10 p-3 text-xs leading-5 text-rose-200"><?= htmlspecialchars((string) ($customer['ban_reason'] ?: 'No reason recorded.')) ?></p>
+                                                <form class="mt-3" method="post" action="director-customer-action.php" onsubmit="return confirm('Restore this customer account?');"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>"><input type="hidden" name="customer_id" value="<?= (int) $customer['id'] ?>"><input type="hidden" name="action" value="restore"><button class="btn btn-sm w-full border-emerald-400/25 bg-emerald-400/10 text-emerald-200" type="submit"><i data-lucide="user-check" class="h-4 w-4"></i> Restore account</button></form>
+                                            <?php else: ?>
+                                                <form class="mt-3" method="post" action="director-customer-action.php" onsubmit="return confirm('Suspend this customer account? They will be signed out and unable to comment.');"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>"><input type="hidden" name="customer_id" value="<?= (int) $customer['id'] ?>"><input type="hidden" name="action" value="suspend"><input class="input h-10 min-h-10 w-full rounded-lg border-white/10 bg-black/20 text-sm text-white placeholder:text-slate-600" name="ban_reason" maxlength="180" placeholder="Reason for suspension" required><button class="btn btn-sm mt-2 w-full border-rose-400/25 bg-rose-400/10 text-rose-200" type="submit"><i data-lucide="user-x" class="h-4 w-4"></i> Suspend account</button></form>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="hidden py-8 text-center" data-customer-empty><i data-lucide="search-x" class="mx-auto h-6 w-6 text-slate-600"></i><p class="mt-2 text-sm font-black">No customer matches that search.</p></div>
+                <?php else: ?>
+                    <div class="py-8 text-center"><i data-lucide="users" class="mx-auto h-7 w-7 text-slate-600"></i><p class="mt-3 text-sm font-black">No customer accounts yet.</p></div>
+                <?php endif; ?>
+            </div>
+        </details>
     </main>
 
     <div class="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
@@ -169,5 +282,19 @@ $currentCue = isset($cueScripts[$sceneState['cue']])
         window.ECOCART_DIRECTOR_CUES = <?= json_encode($cueScripts, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
     </script>
     <script src="assets/director.js?v=<?= htmlspecialchars((string) @filemtime(__DIR__ . '/assets/director.js')) ?>"></script>
+    <script>
+        const customerSearch = document.querySelector('[data-customer-search]');
+        const customerItems = [...document.querySelectorAll('[data-customer-item]')];
+        customerSearch?.addEventListener('input', () => {
+            const term = customerSearch.value.trim().toLowerCase();
+            let visible = 0;
+            customerItems.forEach((item) => { const show = !term || item.dataset.customerSearchText.includes(term); item.classList.toggle('hidden', !show); visible += show ? 1 : 0; });
+            document.querySelector('[data-customer-empty]')?.classList.toggle('hidden', visible > 0);
+        });
+        document.querySelectorAll('[data-customer-toggle]').forEach((button) => button.addEventListener('click', () => {
+            const editor = button.closest('[data-customer-item]')?.querySelector('[data-customer-editor]');
+            editor?.classList.toggle('hidden');
+        }));
+    </script>
 </body>
 </html>

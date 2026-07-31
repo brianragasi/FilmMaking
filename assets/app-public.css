@@ -4,10 +4,13 @@
 @source "../admin.php";
 @source "../login.php";
 @source "../account.php";
+@source "../profile-setup.php";
+@source "../product.php";
 @source "../logout.php";
 @source "../director.php";
 @source "../attacker-terminal.php";
 @source "../includes/customer-outage.php";
+@source "../includes/discussions.php";
 @source "./app-public.js";
 @source "./director.js";
 @source "./scene-client.js";

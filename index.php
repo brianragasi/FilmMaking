@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/products.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/scene.php';
+require_once __DIR__ . '/includes/discussions.php';
 
 $sceneState = read_scene_state();
 if (scene_is_outage($sceneState)) {
@@ -12,6 +13,7 @@ if (scene_is_outage($sceneState)) {
 }
 
 $products = products();
+$discussionSummary = product_discussion_summary();
 $currentUser = current_user();
 $accountName = $currentUser ? trim(explode(' ', (string) $currentUser['name'])[0] ?? (string) $currentUser['name']) : '';
 $departments = [
@@ -339,6 +341,8 @@ $storyPicks = array_slice($products, 0, 6);
                             'image_url' => (string) $product['image_url'],
                         ];
                         $productJson = htmlspecialchars((string) json_encode($cartProduct), ENT_QUOTES);
+                        $productDiscussion = $discussionSummary[(int) $product['id']] ?? ['count' => 0, 'rating' => 0.0];
+                        $displayRating = (float) $productDiscussion['rating'] > 0 ? (float) $productDiscussion['rating'] : 5.0;
                         ?>
                         <article class="product-card group relative flex min-w-0 flex-col bg-white p-4" data-product-card data-product-name="<?= htmlspecialchars(strtolower((string) $product['name'])) ?>" data-product-category="<?= htmlspecialchars($category) ?>">
                             <figure class="relative aspect-[5/4] overflow-hidden bg-slate-100">
@@ -356,7 +360,7 @@ $storyPicks = array_slice($products, 0, 6);
                             <div class="flex flex-1 flex-col pt-4">
                                 <div class="flex items-center justify-between gap-2">
                                     <p class="text-[10px] font-black uppercase text-slate-400"><?= htmlspecialchars((string) $product['category']) ?></p>
-                                    <p class="flex items-center gap-1 text-[11px] font-bold text-slate-500"><i data-lucide="star" class="h-3 w-3 fill-amber-400 text-amber-400"></i> 4.<?= 6 + ($index % 4) ?></p>
+                                    <p class="flex items-center gap-1 text-[11px] font-bold text-slate-500"><i data-lucide="star" class="h-3 w-3 fill-amber-400 text-amber-400"></i> <?= number_format($displayRating, 1) ?></p>
                                 </div>
                                 <h3 class="mt-2 min-h-12 text-base font-black leading-6"><?= htmlspecialchars((string) $product['name']) ?></h3>
                                 <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500"><?= htmlspecialchars((string) $product['description']) ?></p>
@@ -370,6 +374,10 @@ $storyPicks = array_slice($products, 0, 6);
                                     </button>
                                     <span class="text-[10px] font-bold text-slate-400"><?= (int) $product['stock'] ?> left</span>
                                 </div>
+                                <a class="mt-2 flex min-h-9 items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 text-xs font-black text-slate-600 transition hover:border-rose-300 hover:bg-rose-50 hover:text-rose-700" href="product.php?id=<?= (int) $product['id'] ?>#discussion">
+                                    <i data-lucide="messages-square" class="h-4 w-4"></i>
+                                    <?= (int) $productDiscussion['count'] > 0 ? (int) $productDiscussion['count'] . ' discussion' . ((int) $productDiscussion['count'] === 1 ? '' : 's') : 'Start a discussion' ?>
+                                </a>
                             </div>
                         </article>
                     <?php endforeach; ?>

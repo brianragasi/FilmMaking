@@ -54,6 +54,19 @@ Implemented pages:
 - `index.php` - storefront, sale countdown, shopper groups, script-matched products
 - `checkout.php` - cart and checkout, with simulated DDoS server-error state
 - `admin.php` - operations dashboard, safe terminal simulator, user/role counts, impact montage, incident meeting plan
+- `director.php` - three-button filming remote plus secondary discussion moderation
+- `product.php` - product-specific registered-customer discussions and ratings
+
+The filmed checkout sequence is now explicit:
+
+1. The Director presses **Start sale**.
+2. Sarah fills a valid cart and presses **Place order**.
+3. Checkout stays on the endless loading screen and does not create an order.
+4. The Director presses **Shut down website**.
+5. Sarah's open screen automatically fills with **SERVER ERROR. PLEASE TRY AGAIN.**
+
+The browser changes its application display only. GoogieHost remains online,
+and the scene does not generate artificial traffic.
 
 Script-matched products now include:
 
@@ -72,9 +85,5 @@ Script-matched products now include:
 - Baby clothes
 - Feeding bottles
 
-## Remaining Optional Improvements
-
-- Add a separate full-screen `attacker.php` page for filming the hidden attacker scene.
-- Add a `scene-mode.php` or query parameter for camera shots, such as `?scene=classroom`, `?scene=barangay`, or `?scene=mother`.
-- Add fake screen overlays for split-screen recording: loading spinner, server error, restored services notification.
-- Add a simple incident-report PDF/print page for the Chapter 5 meeting screen.
+The attacker scene remains a harmless local Electron terminal prop and is not
+deployed to public hosting.

@@ -13,6 +13,11 @@ includes/config.local.php
 includes/order-queue.jsonl
 includes/scene-state.json
 
+# User-uploaded profile photos stay on the hosting server
+uploads/profiles/*
+!uploads/profiles/.gitkeep
+!uploads/profiles/.htaccess
+
 # Editor and operating-system files
 .idea/
 .vscode/

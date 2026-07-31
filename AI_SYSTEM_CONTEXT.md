@@ -29,6 +29,10 @@ infrastructure controls.
 - Registers and signs in through `login.php`.
 - Shops through `index.php`.
 - Uses the cart and `checkout.php`.
+- Reads product discussions publicly and posts only while signed in.
+- Can react to comments and soft-delete only comments they authored.
+- Can customize a display name, profile note, initials color, and optional
+  profile picture.
 - Opens only their own account and orders.
 
 ### Operations Admin
@@ -44,6 +48,9 @@ infrastructure controls.
 - Opens `director.php`.
 - Must not open `admin.php`.
 - Is the only role allowed to POST changes to `scene-state.php`.
+- Can moderate product discussions, including removing comments from public view.
+- Can review customer profiles, correct inappropriate display content, remove
+  profile pictures, suspend accounts with a reason, and restore accounts.
 
 Never merge the admin and Director roles.
 
@@ -58,11 +65,17 @@ The Director interface must remain simple. It has exactly three controls:
 Do not add pre-take, raise-traffic, checkout-loading, customer-refresh,
 recovery, or runbook buttons to the Director Remote.
 
+Discussion and customer-safety moderation are separate collapsible management
+areas. They are not filming cues and must not compete visually with the three
+scene controls.
+
 ### Customer-Screen Results
 
 - `restored`: customer screens automatically show the working storefront.
 - `sale_live`: the storefront automatically shows the full-screen
-  **SALE IS LIVE!** announcement and keeps the sale ribbon active.
+  **SALE IS LIVE!** announcement, keeps the sale ribbon active, and arms the
+  scripted checkout freeze. A valid Place Order click then shows the endless
+  checkout spinner without submitting an order.
 - `outage`: customer screens automatically show the fictional HTTP 503 page.
 
 Customers do not need to refresh manually. The lightweight public GET request
@@ -90,15 +103,17 @@ Registration and login must follow these rules:
 
 1. A new valid registration inserts one customer row and immediately signs in.
 2. The account page displays a clear success notice after registration.
-3. Repeating registration with the same email and same password is safe: the
+3. A newly created customer is offered profile setup with clear **Set up
+   profile now** and **Later** actions; neither choice traps the customer.
+4. Repeating registration with the same email and same password is safe: the
    existing customer is signed in instead of receiving a duplicate-email trap.
-4. The same email with a different password shows an existing-account message
+5. The same email with a different password shows an existing-account message
    and a direct link to the sign-in form.
-5. A verified password signs the user in even when optional metadata updates,
+6. A verified password signs the user in even when optional metadata updates,
    such as `last_login_at`, fail on an older production schema.
-6. Passwords are stored only with `password_hash()` and checked with
+7. Passwords are stored only with `password_hash()` and checked with
    `password_verify()`.
-7. Never log, commit, display, or hard-code passwords.
+8. Never log, commit, display, or hard-code passwords.
 
 The account implementation lives primarily in:
 
@@ -106,6 +121,29 @@ The account implementation lives primarily in:
 - `account.php`
 - `includes/auth.php`
 - `database/schema.sql`
+
+## Product Discussions And Profiles
+
+- Product pages live at `product.php?id=PRODUCT_ID`.
+- Everyone may read comments; only signed-in database customers may post.
+- Each post has a 1-5 star rating and a maximum 1,000-character body.
+- Posting uses CSRF validation, prepared statements, and a short session rate
+  limit. Product queries are capped and indexed for low-cost shared hosting.
+- Signed-in customers can independently toggle Helpful, Love, and Funny
+  reactions. The indexed `product_discussion_reactions` table prevents
+  duplicate reactions from the same customer.
+- Customers may soft-delete only their own active comments. Director deletion
+  remains a separate moderation permission.
+- Profiles use an optional image or initials with one of six preset colors.
+- Profile images are limited to JPEG, PNG, or WebP files up to 2 MB. Uploads
+  receive random server-side names, are validated as images, and are stored in
+  `uploads/profiles/` with script execution disabled.
+- The Director can edit customer names and notes, remove inappropriate images,
+  suspend accounts with a visible reason, and restore them later through
+  `director-customer-action.php`.
+- Director deletion is a soft delete through
+  `director-discussion-action.php`; deleted comments leave public views.
+- Shared logic is in `includes/discussions.php`.
 
 ## Scene-State Implementation
 
@@ -165,10 +203,16 @@ Before merging:
 npm run build:css
 php -l login.php
 php -l account.php
+php -l profile-setup.php
+php -l product.php
+php -l discussion-action.php
+php -l director-discussion-action.php
+php -l director-customer-action.php
 php -l director.php
 php -l scene-state.php
 php -l includes/auth.php
 php -l includes/scene.php
+php -l includes/discussions.php
 node --check assets/app-public.js
 node --check assets/director.js
 node --check assets/scene-client.js
@@ -184,6 +228,16 @@ Also test these workflows in a browser:
 5. Confirm an admin cannot open `director.php`.
 6. Confirm a Director cannot open `admin.php`.
 7. Confirm all three Director controls update customer screens.
+8. During `sale_live`, submit a valid cart and confirm checkout keeps spinning.
+9. Trigger `outage` and confirm the error fills that screen without a refresh.
+10. Confirm guests can read but cannot post product comments.
+11. Confirm a customer can post and the Director can remove the comment.
+12. Confirm a customer can toggle each reaction and cannot delete another
+    customer's comment.
+13. Confirm a customer can upload a valid profile photo and invalid or oversized
+    files are rejected.
+14. Confirm the Director can remove a photo, suspend the customer, block that
+    customer's login, and restore the account.
 
 ## Definition Of Done
 

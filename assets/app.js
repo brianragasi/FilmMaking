@@ -1597,6 +1597,18 @@ function bootCheckoutGuard() {
       return;
     }
 
+    if (document.body.dataset.sceneCue === 'sale_live') {
+      event.preventDefault();
+      const loadingScreen = document.querySelector('[data-scene-loading]');
+      const submitButton = form.querySelector('[data-place-order]');
+      loadingScreen?.classList.remove('hidden');
+      submitButton?.setAttribute('disabled', 'disabled');
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+      return;
+    }
+
     if (getSystemState() !== 'attack' || !checkoutIncidentModeEnabled()) {
       return;
     }

@@ -40,9 +40,13 @@ send_ecocart_security_headers();
 function auth_schema_ready(): bool
 {
     static $ready = null;
+    $schemaVersion = 2;
 
     if (is_bool($ready)) {
         return $ready;
+    }
+    if ((int) ($_SESSION['auth_schema_version'] ?? 0) >= $schemaVersion) {
+        return $ready = true;
     }
 
     $pdo = db();
@@ -58,11 +62,30 @@ function auth_schema_ready(): bool
                 email VARCHAR(160) NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 role VARCHAR(20) NOT NULL DEFAULT 'customer',
+                avatar_style VARCHAR(20) NOT NULL DEFAULT 'rose',
+                bio VARCHAR(180) NOT NULL DEFAULT '',
+                avatar_path VARCHAR(255) NULL DEFAULT NULL,
+                is_banned TINYINT(1) NOT NULL DEFAULT 0,
+                ban_reason VARCHAR(180) NULL DEFAULT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 last_login_at TIMESTAMP NULL DEFAULT NULL,
                 UNIQUE KEY users_email_unique (email)
             )"
         );
+        $columns = [
+            'avatar_style' => "ALTER TABLE ecocart_users ADD COLUMN avatar_style VARCHAR(20) NOT NULL DEFAULT 'rose'",
+            'bio' => "ALTER TABLE ecocart_users ADD COLUMN bio VARCHAR(180) NOT NULL DEFAULT ''",
+            'avatar_path' => 'ALTER TABLE ecocart_users ADD COLUMN avatar_path VARCHAR(255) NULL DEFAULT NULL',
+            'is_banned' => 'ALTER TABLE ecocart_users ADD COLUMN is_banned TINYINT(1) NOT NULL DEFAULT 0',
+            'ban_reason' => 'ALTER TABLE ecocart_users ADD COLUMN ban_reason VARCHAR(180) NULL DEFAULT NULL',
+        ];
+        foreach ($columns as $column => $alterSql) {
+            $exists = $pdo->query("SHOW COLUMNS FROM ecocart_users LIKE " . $pdo->quote($column))->fetch();
+            if (!$exists) {
+                $pdo->exec($alterSql);
+            }
+        }
+        $_SESSION['auth_schema_version'] = $schemaVersion;
         $ready = true;
     } catch (Throwable $error) {
         $ready = false;
@@ -184,6 +207,20 @@ function record_failed_login(): void
     $_SESSION['login_attempts'] = array_slice($attempts, -5);
 }
 
+function set_auth_login_message(string $message): void
+{
+    $_SESSION['auth_login_message'] = $message;
+}
+
+function consume_auth_login_message(): ?string
+{
+    $message = isset($_SESSION['auth_login_message']) && is_string($_SESSION['auth_login_message'])
+        ? $_SESSION['auth_login_message']
+        : null;
+    unset($_SESSION['auth_login_message']);
+    return $message;
+}
+
 function sign_in_user(array $user): void
 {
     session_regenerate_id(true);
@@ -210,7 +247,7 @@ function attempt_login(string $email, string $password): bool
     if ($schemaReady) {
         try {
             $statement = $pdo->prepare(
-                'SELECT id, name, email, password_hash, role
+                'SELECT id, name, email, password_hash, role, is_banned, ban_reason
                  FROM ecocart_users
                  WHERE email = :email
                  LIMIT 1'
@@ -219,6 +256,15 @@ function attempt_login(string $email, string $password): bool
             $user = $statement->fetch();
 
             if ($user && password_verify($password, (string) $user['password_hash'])) {
+                if (!empty($user['is_banned'])) {
+                    set_auth_login_message(
+                        trim((string) ($user['ban_reason'] ?? '')) !== ''
+                            ? 'This account is suspended: ' . trim((string) $user['ban_reason'])
+                            : 'This account is suspended. Contact the EcoCart team for help.'
+                    );
+                    record_failed_login();
+                    return false;
+                }
                 sign_in_user($user);
 
                 try {
@@ -275,7 +321,7 @@ function register_customer(string $name, string $email, string $password): array
 
     try {
         $existingStatement = $pdo->prepare(
-            'SELECT id, name, email, password_hash, role
+            'SELECT id, name, email, password_hash, role, is_banned, ban_reason
              FROM ecocart_users
              WHERE email = :email
              LIMIT 1'
@@ -284,6 +330,14 @@ function register_customer(string $name, string $email, string $password): array
         $existingUser = $existingStatement->fetch();
 
         if ($existingUser) {
+            if (!empty($existingUser['is_banned'])) {
+                return [
+                    'ok' => false,
+                    'created' => false,
+                    'code' => 'account_suspended',
+                    'message' => 'This account is suspended and cannot be used to register again.',
+                ];
+            }
             if (
                 (string) ($existingUser['role'] ?? 'customer') === 'customer'
                 && password_verify($password, (string) $existingUser['password_hash'])
@@ -330,7 +384,7 @@ function register_customer(string $name, string $email, string $password): array
         if ($driverCode === 1062) {
             try {
                 $existingStatement = $pdo->prepare(
-                    'SELECT id, name, email, password_hash, role
+                    'SELECT id, name, email, password_hash, role, is_banned, ban_reason
                      FROM ecocart_users
                      WHERE email = :email
                      LIMIT 1'
@@ -340,6 +394,7 @@ function register_customer(string $name, string $email, string $password): array
 
                 if (
                     $existingUser
+                    && empty($existingUser['is_banned'])
                     && (string) ($existingUser['role'] ?? 'customer') === 'customer'
                     && password_verify($password, (string) $existingUser['password_hash'])
                 ) {
@@ -398,7 +453,7 @@ function sign_out_user(): void
 
 function safe_next_path(?string $next): string
 {
-    $allowed = ['index.php', 'account.php', 'checkout.php', 'admin.php', 'director.php', 'attacker-terminal.php'];
+    $allowed = ['index.php', 'product.php', 'account.php', 'profile-setup.php', 'checkout.php', 'admin.php', 'director.php', 'attacker-terminal.php'];
     $candidate = basename((string) $next);
 
     return in_array($candidate, $allowed, true) ? $candidate : 'account.php';
@@ -449,13 +504,23 @@ function refresh_authenticated_user(array $user): array
 
     $pdo = db();
 
-    if ($pdo) {
+    if ($pdo && auth_schema_ready()) {
         try {
-            $statement = $pdo->prepare('SELECT id, name, email, role FROM ecocart_users WHERE id = :id LIMIT 1');
+            $statement = $pdo->prepare('SELECT id, name, email, role, is_banned, ban_reason FROM ecocart_users WHERE id = :id LIMIT 1');
             $statement->execute(['id' => (int) $user['id']]);
             $freshUser = $statement->fetch();
 
             if ($freshUser) {
+                if (!empty($freshUser['is_banned'])) {
+                    set_auth_login_message(
+                        trim((string) ($freshUser['ban_reason'] ?? '')) !== ''
+                            ? 'This account is suspended: ' . trim((string) $freshUser['ban_reason'])
+                            : 'This account is suspended. Contact the EcoCart team for help.'
+                    );
+                    unset($_SESSION['user']);
+                    header('Location: login.php');
+                    exit;
+                }
                 $_SESSION['user'] = [
                     'id' => (int) $freshUser['id'],
                     'name' => (string) $freshUser['name'],

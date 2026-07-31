@@ -10,6 +10,10 @@ $mode = (string) ($_POST['mode'] ?? $_GET['mode'] ?? 'login');
 $mode = $mode === 'register' ? 'register' : 'login';
 $errors = [];
 $registrationErrorCode = null;
+$sessionAuthMessage = consume_auth_login_message();
+if ($sessionAuthMessage) {
+    $errors[] = $sessionAuthMessage;
+}
 
 if ($existingUser = current_user()) {
     header('Location: ' . ($next !== 'account.php' ? $next : user_home($existingUser)));
@@ -43,7 +47,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($result['ok']) {
                 $_SESSION['account_notice'] = (string) $result['message'];
                 $registeredUser = current_user();
-                header('Location: ' . ($next !== 'account.php' ? $next : user_home($registeredUser ?? [])));
+                $returnPath = $next !== 'account.php' ? $next : user_home($registeredUser ?? []);
+                if (!empty($result['created'])) {
+                    $_SESSION['profile_setup_pending'] = true;
+                    $_SESSION['profile_return'] = $returnPath;
+                    header('Location: profile-setup.php?next=' . rawurlencode($returnPath));
+                    exit;
+                }
+                header('Location: ' . $returnPath);
                 exit;
             }
             $registrationErrorCode = (string) ($result['code'] ?? '');
@@ -60,9 +71,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . ($next !== 'account.php' ? $next : user_home($user ?? [])));
             exit;
         } else {
-            $errors[] = login_attempt_allowed()
+            $loginMessage = consume_auth_login_message();
+            $errors[] = $loginMessage ?? (login_attempt_allowed()
                 ? 'The email or password is incorrect.'
-                : 'Too many sign-in attempts. Try again in 15 minutes.';
+                : 'Too many sign-in attempts. Try again in 15 minutes.');
         }
     }
 }
