@@ -144,6 +144,12 @@ function configured_account(string $role): ?array
             'name' => 'Production Director',
             'id' => -2,
         ],
+        'store_manager' => [
+            'email_key' => 'manager_email',
+            'hash_key' => 'manager_password_hash',
+            'name' => 'Store Manager',
+            'id' => -3,
+        ],
     ];
 
     if (!isset($definitions[$role])) {
@@ -175,6 +181,11 @@ function configured_admin(): ?array
 function configured_director(): ?array
 {
     return configured_account('director');
+}
+
+function configured_store_manager(): ?array
+{
+    return configured_account('store_manager');
 }
 
 function current_user(): ?array
@@ -289,7 +300,7 @@ function attempt_login(string $email, string $password): bool
         }
     }
 
-    foreach (['admin', 'director'] as $configuredRole) {
+    foreach (['admin', 'director', 'store_manager'] as $configuredRole) {
         $configuredUser = configured_account($configuredRole);
         if (
             $configuredUser
@@ -453,7 +464,7 @@ function sign_out_user(): void
 
 function safe_next_path(?string $next): string
 {
-    $allowed = ['index.php', 'product.php', 'account.php', 'profile-setup.php', 'checkout.php', 'admin.php', 'director.php', 'attacker-terminal.php'];
+    $allowed = ['index.php', 'product.php', 'account.php', 'profile-setup.php', 'checkout.php', 'admin.php', 'director.php', 'manager.php', 'attacker-terminal.php'];
     $candidate = basename((string) $next);
 
     return in_array($candidate, $allowed, true) ? $candidate : 'account.php';
@@ -464,6 +475,7 @@ function user_home(array $user): string
     return match ($user['role'] ?? 'customer') {
         'director' => 'director.php',
         'admin' => 'admin.php',
+        'store_manager' => 'manager.php',
         default => 'account.php',
     };
 }
@@ -558,6 +570,11 @@ function require_admin(): array
 function require_director(): array
 {
     return require_role(['director']);
+}
+
+function require_store_manager(): array
+{
+    return require_role(['store_manager']);
 }
 
 function auth_no_store(): void

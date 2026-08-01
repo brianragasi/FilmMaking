@@ -55,7 +55,21 @@ Implemented pages:
 - `checkout.php` - cart and checkout, with simulated DDoS server-error state
 - `admin.php` - operations dashboard, safe terminal simulator, user/role counts, impact montage, incident meeting plan
 - `director.php` - three-button filming remote plus secondary discussion moderation
+- `manager.php` - store-team launch monitor for rising visitors, prepared carts, orders, and stock
 - `product.php` - product-specific registered-customer discussions and ratings
+
+The pre-sale store sequence is separated by responsibility:
+
+1. Employees and the Store Manager watch `manager.php` as online visitors and
+   prepared carts rise.
+2. The Store Manager confirms sale pricing, inventory, checkout readiness, and
+   the `BIGBLOWOUT` discount code.
+3. The Director presses **Start sale** only when the camera is ready.
+4. IT staff move to `admin.php` only when the availability incident begins.
+
+This avoids giving store employees infrastructure or cybersecurity controls.
+Their line that traffic is increasing refers to online shoppers, not server
+requests or DDoS telemetry.
 
 The filmed checkout sequence is now explicit:
 

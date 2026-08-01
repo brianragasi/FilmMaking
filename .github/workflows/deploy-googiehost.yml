@@ -39,6 +39,7 @@ jobs:
           node --check assets/app-public.js
           node --check assets/app.js
           node --check assets/director.js
+          node --check assets/manager.js
           node --check assets/scene-client.js
 
       - name: Create production database config
@@ -51,6 +52,8 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.GOOGIEHOST_ADMIN_PASSWORD }}
           DIRECTOR_EMAIL: ${{ secrets.GOOGIEHOST_DIRECTOR_EMAIL }}
           DIRECTOR_PASSWORD: ${{ secrets.GOOGIEHOST_DIRECTOR_PASSWORD }}
+          MANAGER_EMAIL: ${{ secrets.GOOGIEHOST_MANAGER_EMAIL }}
+          MANAGER_PASSWORD: ${{ secrets.GOOGIEHOST_MANAGER_PASSWORD }}
         run: |
           test -n "$DB_HOST"
           test -n "$DB_NAME"
@@ -65,8 +68,10 @@ jobs:
           ];
           $adminEmail = strtolower(trim((string) getenv("ADMIN_EMAIL")));
           $directorEmail = strtolower(trim((string) getenv("DIRECTOR_EMAIL")));
-          if ($adminEmail !== "" && $directorEmail !== "" && hash_equals($adminEmail, $directorEmail)) {
-              fwrite(STDERR, "Admin and Director must use different email addresses.\n");
+          $managerEmail = strtolower(trim((string) getenv("MANAGER_EMAIL")));
+          $configuredEmails = array_filter([$adminEmail, $directorEmail, $managerEmail]);
+          if (count($configuredEmails) !== count(array_unique($configuredEmails))) {
+              fwrite(STDERR, "Admin, Director, and Store Manager must use different email addresses.\n");
               exit(1);
           }
           if (getenv("ADMIN_EMAIL") && getenv("ADMIN_PASSWORD")) {
@@ -76,6 +81,10 @@ jobs:
           if (getenv("DIRECTOR_EMAIL") && getenv("DIRECTOR_PASSWORD")) {
               $config["director_email"] = $directorEmail;
               $config["director_password_hash"] = password_hash(getenv("DIRECTOR_PASSWORD"), PASSWORD_DEFAULT);
+          }
+          if (getenv("MANAGER_EMAIL") && getenv("MANAGER_PASSWORD")) {
+              $config["manager_email"] = $managerEmail;
+              $config["manager_password_hash"] = password_hash(getenv("MANAGER_PASSWORD"), PASSWORD_DEFAULT);
           }
           file_put_contents("includes/config.local.php", "<?php\nreturn " . var_export($config, true) . ";\n");
           '

@@ -37,6 +37,8 @@ Create these secrets:
 | `GOOGIEHOST_ADMIN_PASSWORD` | Strong password used by the server-admin actor |
 | `GOOGIEHOST_DIRECTOR_EMAIL` | Separate email used to open the Director Console |
 | `GOOGIEHOST_DIRECTOR_PASSWORD` | Strong password used only by the Director |
+| `GOOGIEHOST_MANAGER_EMAIL` | Separate email used by the Store Manager actor |
+| `GOOGIEHOST_MANAGER_PASSWORD` | Strong password used only for Store Operations |
 
 Never commit the FTP password to GitHub or paste it into a PHP file.
 
@@ -83,6 +85,17 @@ The Director Remote has only three filming controls:
 - **Shut down website** switches customer screens to the fictional server-error scene.
 
 Customer screens check the lightweight scene endpoint periodically and change automatically. The controls never stop GoogieHost and never generate traffic.
+
+## Store Operations
+
+After adding the two Store Manager secrets and completing a deployment, sign in through:
+
+```text
+http://ecocart.whf.bz/login.php?next=manager.php
+```
+
+The Store Manager account opens a read-only business monitor for the pre-sale
+employee scene. It cannot access the IT admin console or the Director Remote.
 
 ## Normal Update Flow
 

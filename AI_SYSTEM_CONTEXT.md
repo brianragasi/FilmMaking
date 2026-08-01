@@ -42,6 +42,16 @@ infrastructure controls.
 - Uses the cinematic production console.
 - Must not open `director.php` or control filming states.
 
+### Store Manager
+
+- Uses a separate account whose role is `store_manager`.
+- Opens the read-only `manager.php` sale-operations monitor.
+- Watches online visitors, prepared carts, orders, inventory, department
+  readiness, and sale status.
+- Has no incident terminal, security controls, or Director filming controls.
+- Employees in the pre-sale scene may read this same screen; they do not need
+  another application role.
+
 ### Production Director
 
 - Uses a separate account whose role is `director`.
@@ -54,6 +64,18 @@ infrastructure controls.
   profile pictures, suspend accounts with a reason, and restore accounts.
 
 Never merge the admin and Director roles.
+
+Never merge the Store Manager monitor with the Operations Admin console. The
+first is for commerce readiness; the second is for infrastructure response.
+
+## Promotion Contract
+
+- Product prices already represent the advertised sale prices.
+- `BIGBLOWOUT` is the visible checkout code for an additional 10% discount.
+- No promo code means no extra checkout discount.
+- Browser calculations are only for immediate feedback; `checkout.php` must
+  validate the code and calculate the discount again before saving an order.
+- Shared promotion rules live in `includes/promotions.php`.
 
 ## Director Remote
 

@@ -3,6 +3,25 @@
   currency: 'PHP',
 });
 
+const PROMO_STORAGE_KEY = 'ecocart_promo_code';
+
+function configuredPromo() {
+  return {
+    code: String(document.body.dataset.promoCode || '').toUpperCase(),
+    rate: Number(document.body.dataset.promoRate || 0),
+  };
+}
+
+function normalizedPromoCode(value) {
+  return String(value || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function activePromoCode() {
+  const promo = configuredPromo();
+  const stored = normalizedPromoCode(localStorage.getItem(PROMO_STORAGE_KEY));
+  return stored && stored === promo.code ? stored : '';
+}
+
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({
     '&': '&amp;',
@@ -166,7 +185,9 @@ function cartTotals() {
 
 function refreshCartUi() {
   const { cart, count, subtotal } = cartTotals();
-  const discount = subtotal > 0 ? subtotal * 0.1 : 0;
+  const promo = configuredPromo();
+  const promoCode = activePromoCode();
+  const discount = subtotal > 0 && promoCode ? subtotal * promo.rate : 0;
   const shipping = subtotal > 0 && subtotal < 1500 ? 49 : 0;
   const total = Math.max(0, subtotal - discount + shipping);
 
@@ -186,6 +207,10 @@ function refreshCartUi() {
     node.textContent = `-${money.format(discount)}`;
   });
 
+  document.querySelectorAll('[data-order-discount-label]').forEach((node) => {
+    node.textContent = promoCode ? `Promo (${promoCode})` : 'Discount';
+  });
+
   document.querySelectorAll('[data-order-shipping]').forEach((node) => {
     node.textContent = shipping ? money.format(shipping) : 'Free';
   });
@@ -196,6 +221,10 @@ function refreshCartUi() {
 
   document.querySelectorAll('[data-cart-json]').forEach((node) => {
     node.value = JSON.stringify(cart);
+  });
+
+  document.querySelectorAll('[data-promo-code-field]').forEach((node) => {
+    node.value = promoCode;
   });
 
   const checkoutList = document.querySelector('[data-checkout-list]');
@@ -265,6 +294,58 @@ function refreshCartUi() {
   }
 
   applySystemState();
+}
+
+function bootPromoCode() {
+  const input = document.querySelector('[data-promo-input]');
+  const applyButton = document.querySelector('[data-promo-apply]');
+  const removeButton = document.querySelector('[data-promo-remove]');
+  const feedback = document.querySelector('[data-promo-feedback]');
+  if (!input || !applyButton || !feedback) {
+    return;
+  }
+
+  const promo = configuredPromo();
+  const storedCode = activePromoCode();
+  if (storedCode) {
+    input.value = storedCode;
+    feedback.textContent = 'Code applied. Your extra 10% discount is in the order summary.';
+    feedback.className = 'mt-2 text-xs font-bold text-emerald-700';
+    removeButton?.classList.remove('hidden');
+  }
+
+  const apply = () => {
+    const candidate = normalizedPromoCode(input.value);
+    input.value = candidate;
+    if (candidate !== '' && candidate === promo.code) {
+      localStorage.setItem(PROMO_STORAGE_KEY, candidate);
+      feedback.textContent = 'Code applied. Your extra 10% discount is in the order summary.';
+      feedback.className = 'mt-2 text-xs font-bold text-emerald-700';
+      removeButton?.classList.remove('hidden');
+    } else {
+      localStorage.removeItem(PROMO_STORAGE_KEY);
+      feedback.textContent = candidate ? 'That code was not recognized. Check it and try again.' : 'Enter a discount code first.';
+      feedback.className = 'mt-2 text-xs font-bold text-rose-700';
+      removeButton?.classList.toggle('hidden', candidate === '');
+    }
+    refreshCartUi();
+  };
+
+  applyButton.addEventListener('click', apply);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      apply();
+    }
+  });
+  removeButton?.addEventListener('click', () => {
+    localStorage.removeItem(PROMO_STORAGE_KEY);
+    input.value = '';
+    feedback.textContent = 'Discount code removed.';
+    feedback.className = 'mt-2 text-xs font-bold text-slate-500';
+    removeButton.classList.add('hidden');
+    refreshCartUi();
+  });
 }
 
 function bootStorefront() {
@@ -1230,6 +1311,15 @@ function bootCheckoutGuard() {
   }
 
   form.addEventListener('submit', (event) => {
+    const promoInput = document.querySelector('[data-promo-input]');
+    const typedPromo = normalizedPromoCode(promoInput?.value);
+    if (typedPromo && typedPromo !== activePromoCode()) {
+      event.preventDefault();
+      document.querySelector('[data-promo-apply]')?.click();
+      promoInput?.focus();
+      return;
+    }
+
     if (getCart().length === 0) {
       event.preventDefault();
       refreshCartUi();
@@ -1262,6 +1352,7 @@ document.addEventListener('DOMContentLoaded', () => {
   bootCountdown();
   bootTerminal();
   bootCheckoutGuard();
+  bootPromoCode();
   refreshCartUi();
   applySystemState();
 
@@ -1273,6 +1364,9 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('storage', (event) => {
   if (event.key === 'ecocart_system_state') {
     applySystemState();
+  }
+  if (event.key === PROMO_STORAGE_KEY) {
+    refreshCartUi();
   }
 });
 

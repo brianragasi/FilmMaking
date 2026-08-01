@@ -5,6 +5,7 @@ require_once __DIR__ . '/includes/products.php';
 require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/scene.php';
 require_once __DIR__ . '/includes/discussions.php';
+require_once __DIR__ . '/includes/promotions.php';
 
 $sceneState = read_scene_state();
 if (scene_is_outage($sceneState)) {
@@ -34,6 +35,7 @@ $departments = [
 $productCount = count($products);
 $dealProduct = $products[1] ?? $products[0] ?? null;
 $storyPicks = array_slice($products, 0, 6);
+$publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
 ?>
 <!doctype html>
 <html lang="en" data-theme="light">
@@ -64,7 +66,7 @@ $storyPicks = array_slice($products, 0, 6);
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="bg-[#f4f5f7] text-slate-950 antialiased" data-scene-client data-scene-view="storefront" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+<body class="bg-[#f4f5f7] text-slate-950 antialiased" data-scene-client data-scene-view="storefront" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>" data-promo-code="<?= htmlspecialchars((string) $publicPromotion['code']) ?>" data-promo-rate="<?= htmlspecialchars((string) $publicPromotion['rate']) ?>">
     <div class="sale-takeover hidden" data-sale-takeover role="status" aria-live="polite">
         <div class="sale-takeover-track" aria-hidden="true">
             <span>SALE</span><span>SALE</span><span>SALE</span><span>SALE</span>
@@ -191,6 +193,11 @@ $storyPicks = array_slice($products, 0, 6);
                             <span class="flex items-center gap-2"><i data-lucide="badge-check" class="h-4 w-4 text-emerald-400"></i> Secure payments</span>
                             <span class="flex items-center gap-2"><i data-lucide="rotate-ccw" class="h-4 w-4 text-cyan-300"></i> Easy returns</span>
                             <span class="flex items-center gap-2"><i data-lucide="package-check" class="h-4 w-4 text-amber-300"></i> Limited stocks</span>
+                        </div>
+                        <div class="mt-6 flex w-fit items-center gap-3 border border-amber-300/50 bg-slate-950/80 px-4 py-3 text-sm">
+                            <i data-lucide="ticket-percent" class="h-5 w-5 text-amber-300"></i>
+                            <span class="text-slate-200">Extra 10% at checkout</span>
+                            <code class="border-l border-white/20 pl-3 font-mono font-black text-amber-300"><?= htmlspecialchars((string) $publicPromotion['code']) ?></code>
                         </div>
                     </div>
                 </article>

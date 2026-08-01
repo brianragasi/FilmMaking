@@ -19,6 +19,7 @@ The storefront works in demo mode even before the database is imported. Orders a
 - `checkout.php` - customer checkout and order save
 - `admin.php` - operations dashboard and safe fake terminal simulator
 - `director.php` - three filming cues, discussion moderation, and customer safety controls
+- `manager.php` - read-only store launch, shopper, order, and inventory monitor
 - `profile-setup.php` - customer identity setup with optional profile pictures
 
 ## Hosting
@@ -42,3 +43,11 @@ toggle Helpful/Love/Funny reactions, and soft-delete only their own comments.
 The Director retains a moderation workbench for inappropriate posts, with
 search, rating and product filters, account/storefront shortcuts, and single or
 bulk soft deletion.
+
+## Sale Operations
+
+The public sale advertises code `BIGBLOWOUT`, which customers apply at checkout
+for an extra 10% discount. PHP validates the code again before an order is
+saved. The separate Store Manager account opens `manager.php`; it shows the
+business-side launch monitor from the screenplay and has no IT or filming
+controls.

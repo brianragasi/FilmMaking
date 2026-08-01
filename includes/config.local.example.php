@@ -10,4 +10,6 @@ return [
     'admin_password_hash' => 'generate-with-password_hash',
     'director_email' => 'director@example.com',
     'director_password_hash' => 'generate-with-password_hash',
+    'manager_email' => 'manager@example.com',
+    'manager_password_hash' => 'generate-with-password_hash',
 ];

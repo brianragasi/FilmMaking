@@ -7,13 +7,17 @@ require_once __DIR__ . '/includes/discussions.php';
 
 $user = refresh_authenticated_user(require_login());
 auth_no_store();
+$role = (string) ($user['role'] ?? 'customer');
+if ($role === 'store_manager') {
+    header('Location: manager.php' . (isset($_GET['denied']) ? '?denied=operations' : ''));
+    exit;
+}
 $accountNotice = isset($_SESSION['account_notice']) && is_string($_SESSION['account_notice']) ? $_SESSION['account_notice'] : null;
 unset($_SESSION['account_notice']);
 
 $profile = customer_profile($user);
 $avatarUrl = profile_avatar_url($profile);
 $firstName = trim(explode(' ', (string) $user['name'])[0] ?? (string) $user['name']);
-$role = (string) ($user['role'] ?? 'customer');
 $isAdmin = $role === 'admin';
 $roleLabel = match ($role) {
     'director' => 'Production director',

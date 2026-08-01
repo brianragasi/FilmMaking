@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/includes/discussions.php';
 require_once __DIR__ . '/includes/scene.php';
+require_once __DIR__ . '/includes/promotions.php';
 
 $sceneState = read_scene_state();
 if (scene_is_outage($sceneState)) {
@@ -16,6 +17,11 @@ $orderId = null;
 $orderQueued = false;
 $subtotal = 0.0;
 $orderTotal = 0.0;
+$discount = 0.0;
+$shipping = 0.0;
+$promoCode = '';
+$promotion = null;
+$publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
 $currentUser = current_user();
 if ($currentUser) {
     $currentUser = refresh_authenticated_user($currentUser);
@@ -62,6 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = trim((string) ($_POST['phone'] ?? ''));
     $address = trim((string) ($_POST['address'] ?? ''));
     $cartJson = (string) ($_POST['cart_json'] ?? '[]');
+    $promoCode = normalize_promo_code((string) ($_POST['promo_code'] ?? ''));
+    $promotion = promotion_for_code($promoCode);
     $submittedCart = json_decode($cartJson, true);
 
     if ($name === '') {
@@ -78,6 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!is_array($submittedCart) || count($submittedCart) === 0) {
         $errors[] = 'Your cart is empty.';
+    }
+    if ($promoCode !== '' && !$promotion) {
+        $errors[] = 'That discount code is not valid. Check the spelling or remove it.';
     }
 
     $catalog = product_lookup();
@@ -109,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Your cart total must be greater than zero.';
     }
 
-    $discount = $subtotal * 0.10;
+    $discount = promotion_discount($subtotal, $promotion);
     $shipping = $subtotal >= 1500 ? 0.0 : 49.0;
     $orderTotal = max(0.0, $subtotal - $discount + $shipping);
 
@@ -160,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-view="checkout" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>">
+<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-view="checkout" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>" data-promo-code="<?= htmlspecialchars((string) $publicPromotion['code']) ?>" data-promo-rate="<?= htmlspecialchars((string) $publicPromotion['rate']) ?>">
     <div class="fixed inset-0 z-[100] hidden bg-white" data-scene-loading>
         <div class="flex min-h-screen flex-col">
             <header class="border-b border-slate-200">
@@ -277,7 +288,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <dl class="mt-4 space-y-2.5 text-sm">
                                 <div class="flex justify-between"><dt class="text-slate-500">Order number</dt><dd class="font-bold">#<?= $orderId ?></dd></div>
                                 <div class="flex justify-between"><dt class="text-slate-500">Subtotal</dt><dd class="font-bold"><?= peso($subtotal) ?></dd></div>
-                                <div class="flex justify-between"><dt class="text-slate-500">Big Blowout discount</dt><dd class="font-bold text-emerald-700">-<?= peso($discount) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500"><?= $promotion ? htmlspecialchars((string) $promotion['label']) : 'Discount' ?></dt><dd class="font-bold text-emerald-700">-<?= peso($discount) ?></dd></div>
                                 <div class="flex justify-between"><dt class="text-slate-500">Delivery</dt><dd class="font-bold"><?= $shipping > 0 ? peso($shipping) : 'FREE' ?></dd></div>
                                 <div class="my-3 h-px bg-slate-200"></div>
                                 <div class="flex items-end justify-between"><dt class="font-black">Total</dt><dd class="text-xl font-black text-rose-600"><?= peso($orderTotal) ?></dd></div>
@@ -378,6 +389,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <form class="overflow-hidden rounded-lg border border-slate-200 bg-white xl:sticky xl:top-5" method="post" data-checkout-form>
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
                     <input type="hidden" name="cart_json" data-cart-json>
+                    <input type="hidden" name="promo_code" value="<?= htmlspecialchars($promoCode) ?>" data-promo-code-field>
 
                     <div class="border-b border-slate-200 p-5 sm:p-6">
                         <div class="flex items-center gap-3">
@@ -422,10 +434,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
                     </div>
 
+                    <div class="border-b border-slate-200 p-5 sm:p-6">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h2 class="text-sm font-black">Discount code</h2>
+                                <p class="mt-1 text-xs text-slate-500">Enter your sale code before placing the order.</p>
+                            </div>
+                            <span class="rounded bg-amber-100 px-2 py-1 text-[10px] font-black uppercase text-amber-800">Extra 10% off</span>
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <div class="relative min-w-0 flex-1">
+                                <i data-lucide="ticket-percent" class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"></i>
+                                <input class="input input-bordered h-11 w-full rounded-lg border-slate-300 bg-white pl-10 font-mono text-sm uppercase focus:border-slate-950 focus:outline-none" value="<?= htmlspecialchars($promoCode) ?>" maxlength="24" autocomplete="off" placeholder="Enter code" data-promo-input>
+                            </div>
+                            <button class="btn h-11 min-h-11 border-0 bg-slate-950 px-5 text-white hover:bg-rose-600" type="button" data-promo-apply>Apply</button>
+                            <button class="btn btn-square h-11 min-h-11 border-slate-200 bg-white text-slate-500 hover:bg-rose-50 hover:text-rose-700 <?= $promoCode === '' ? 'hidden' : '' ?>" type="button" aria-label="Remove discount code" title="Remove code" data-promo-remove><i data-lucide="x" class="h-4 w-4"></i></button>
+                        </div>
+                        <p class="mt-2 hidden text-xs font-bold" role="status" aria-live="polite" data-promo-feedback></p>
+                    </div>
+
                     <div class="bg-slate-50 p-5 sm:p-6">
                         <div class="space-y-3 text-sm">
                             <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span class="font-bold" data-order-subtotal>PHP 0.00</span></div>
-                            <div class="flex justify-between"><span class="text-slate-500">Big Blowout discount</span><span class="font-bold text-emerald-700" data-order-discount>-PHP 0.00</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500" data-order-discount-label>Discount</span><span class="font-bold text-emerald-700" data-order-discount>-PHP 0.00</span></div>
                             <div class="flex justify-between"><span class="text-slate-500">Delivery</span><span class="font-bold" data-order-shipping>PHP 0.00</span></div>
                         </div>
                         <div class="my-4 h-px bg-slate-200"></div>
