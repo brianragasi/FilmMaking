@@ -132,3 +132,148 @@
   applyState(currentState);
   window.setInterval(pollState, 5000);
 })();
+
+(() => {
+  const items = [...document.querySelectorAll('[data-moderation-item]')];
+  if (items.length === 0) {
+    return;
+  }
+
+  const searchInput = document.querySelector('[data-moderation-search]');
+  const ratingSelect = document.querySelector('[data-moderation-rating]');
+  const productSelect = document.querySelector('[data-moderation-product]');
+  const clearButton = document.querySelector('[data-moderation-clear]');
+  const selectVisibleButton = document.querySelector('[data-moderation-select-visible]');
+  const visibleCount = document.querySelector('[data-moderation-visible-count]');
+  const selectedCount = document.querySelector('[data-moderation-selected-count]');
+  const emptyState = document.querySelector('[data-moderation-empty]');
+  const bulkForm = document.querySelector('[data-moderation-bulk-form]');
+  const bulkButton = document.querySelector('[data-moderation-bulk-delete]');
+  const checkboxes = items
+    .map((item) => item.querySelector('[data-moderation-checkbox]'))
+    .filter(Boolean);
+
+  function visibleItems() {
+    return items.filter((item) => !item.hidden);
+  }
+
+  function selectedCheckboxes() {
+    return checkboxes.filter((checkbox) => checkbox.checked);
+  }
+
+  function updateSelectionState() {
+    const visible = visibleItems();
+    const selected = selectedCheckboxes();
+    const selectedVisible = visible.filter((item) => {
+      const checkbox = item.querySelector('[data-moderation-checkbox]');
+      return checkbox && checkbox.checked;
+    });
+
+    if (selectedCount) {
+      selectedCount.textContent = String(selected.length);
+    }
+    if (bulkButton) {
+      bulkButton.disabled = selected.length === 0;
+    }
+    if (selectVisibleButton) {
+      const allVisibleSelected = visible.length > 0 && selectedVisible.length === visible.length;
+      selectVisibleButton.textContent = allVisibleSelected ? 'Clear visible' : 'Select visible';
+      selectVisibleButton.disabled = visible.length === 0;
+    }
+  }
+
+  function ratingMatches(itemRating, filter) {
+    if (filter === 'low') {
+      return itemRating <= 2;
+    }
+    if (filter === '3') {
+      return itemRating === 3;
+    }
+    if (filter === 'high') {
+      return itemRating >= 4;
+    }
+    return true;
+  }
+
+  function applyFilters() {
+    const query = (searchInput?.value || '').trim().toLowerCase();
+    const rating = ratingSelect?.value || 'all';
+    const product = productSelect?.value || 'all';
+    let count = 0;
+
+    items.forEach((item) => {
+      const matchesSearch = query === '' || (item.dataset.moderationSearchText || '').includes(query);
+      const matchesRating = ratingMatches(Number(item.dataset.moderationRatingValue || 0), rating);
+      const matchesProduct = product === 'all' || item.dataset.moderationProductValue === product;
+      const show = matchesSearch && matchesRating && matchesProduct;
+      const checkbox = item.querySelector('[data-moderation-checkbox]');
+
+      item.hidden = !show;
+      if (!show && checkbox) {
+        checkbox.checked = false;
+      }
+      if (show) {
+        count += 1;
+      }
+    });
+
+    if (visibleCount) {
+      visibleCount.textContent = String(count);
+    }
+    if (emptyState) {
+      emptyState.classList.toggle('hidden', count !== 0);
+    }
+    updateSelectionState();
+  }
+
+  searchInput?.addEventListener('input', applyFilters);
+  ratingSelect?.addEventListener('change', applyFilters);
+  productSelect?.addEventListener('change', applyFilters);
+
+  clearButton?.addEventListener('click', () => {
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    if (ratingSelect) {
+      ratingSelect.value = 'all';
+    }
+    if (productSelect) {
+      productSelect.value = 'all';
+    }
+    applyFilters();
+    searchInput?.focus();
+  });
+
+  selectVisibleButton?.addEventListener('click', () => {
+    const visible = visibleItems();
+    const shouldSelect = visible.some((item) => {
+      const checkbox = item.querySelector('[data-moderation-checkbox]');
+      return checkbox && !checkbox.checked;
+    });
+
+    visible.forEach((item) => {
+      const checkbox = item.querySelector('[data-moderation-checkbox]');
+      if (checkbox) {
+        checkbox.checked = shouldSelect;
+      }
+    });
+    updateSelectionState();
+  });
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener('change', updateSelectionState);
+  });
+
+  bulkForm?.addEventListener('submit', (event) => {
+    const count = selectedCheckboxes().length;
+    if (count === 0) {
+      event.preventDefault();
+      return;
+    }
+    if (!window.confirm(`Remove ${count} selected ${count === 1 ? 'comment' : 'comments'}?`)) {
+      event.preventDefault();
+    }
+  });
+
+  applyFilters();
+})();

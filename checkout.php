@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/includes/products.php';
-require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/includes/discussions.php';
 require_once __DIR__ . '/includes/scene.php';
 
 $sceneState = read_scene_state();
@@ -18,6 +17,13 @@ $orderQueued = false;
 $subtotal = 0.0;
 $orderTotal = 0.0;
 $currentUser = current_user();
+if ($currentUser) {
+    $currentUser = refresh_authenticated_user($currentUser);
+}
+$headerProfile = $currentUser && (string) ($currentUser['role'] ?? '') === 'customer'
+    ? customer_profile($currentUser)
+    : null;
+$headerAvatar = $headerProfile ? profile_avatar_url($headerProfile) : null;
 
 function offline_order_number(string $email): string
 {
@@ -192,9 +198,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <i data-lucide="shield-check" class="h-4 w-4"></i>
                     Secure checkout
                 </span>
-                <a class="btn btn-square btn-sm border-slate-200 bg-white text-slate-700 hover:border-slate-950" href="<?= $currentUser ? 'account.php' : 'login.php?next=checkout.php' ?>" aria-label="<?= $currentUser ? 'Open my account' : 'Sign in' ?>" title="<?= $currentUser ? 'My account' : 'Sign in' ?>">
-                    <i data-lucide="user-round" class="h-4 w-4"></i>
-                </a>
+                <a class="h-9 w-9 overflow-hidden rounded-lg border border-slate-200 <?= $headerProfile ? htmlspecialchars(avatar_class((string) $headerProfile['avatar_style'])) : 'bg-white text-slate-700' ?>" href="<?= $currentUser ? 'account.php' : 'login.php?next=checkout.php' ?>" aria-label="<?= $currentUser ? 'Open my account' : 'Sign in' ?>" title="<?= $currentUser ? 'My account' : 'Sign in' ?>"><?php if ($headerAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($headerAvatar) ?>" alt="<?= htmlspecialchars((string) $currentUser['name']) ?> profile picture"><?php elseif ($headerProfile): ?><span class="grid h-full w-full place-items-center text-xs font-black"><?= htmlspecialchars(profile_initial((string) $headerProfile['name'])) ?></span><?php else: ?><span class="grid h-full w-full place-items-center"><i data-lucide="user-round" class="h-4 w-4"></i></span><?php endif; ?></a>
                 <a class="btn btn-sm border-slate-200 bg-white text-slate-700 hover:border-slate-950 hover:bg-slate-50" href="index.php#products">
                     <i data-lucide="arrow-left" class="h-4 w-4"></i>
                     <span class="hidden sm:inline">Continue shopping</span>

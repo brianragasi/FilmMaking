@@ -48,7 +48,8 @@ infrastructure controls.
 - Opens `director.php`.
 - Must not open `admin.php`.
 - Is the only role allowed to POST changes to `scene-state.php`.
-- Can moderate product discussions, including removing comments from public view.
+- Can moderate product discussions with search, rating and product filters,
+  account/storefront shortcuts, and single or bulk removal from public view.
 - Can review customer profiles, correct inappropriate display content, remove
   profile pictures, suspend accounts with a reason, and restore accounts.
 
@@ -132,8 +133,10 @@ The account implementation lives primarily in:
 - Signed-in customers can independently toggle Helpful, Love, and Funny
   reactions. The indexed `product_discussion_reactions` table prevents
   duplicate reactions from the same customer.
+- Reaction requests return JSON so the selected state and count update without
+  reloading the product page. The POST form remains the no-JavaScript fallback.
 - Customers may soft-delete only their own active comments. Director deletion
-  remains a separate moderation permission.
+  remains a separate moderation permission and supports guarded bulk removal.
 - Profiles use an optional image or initials with one of six preset colors.
 - Profile images are limited to JPEG, PNG, or WebP files up to 2 MB. Uploads
   receive random server-side names, are validated as images, and are stored in

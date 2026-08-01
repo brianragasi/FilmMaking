@@ -13,6 +13,7 @@
 @source "../includes/discussions.php";
 @source "./app-public.js";
 @source "./director.js";
+@source "./discussions.js";
 @source "./scene-client.js";
 @plugin "daisyui" {
     themes: light --default, business --prefersdark;
@@ -36,6 +37,20 @@ body {
 
 body[data-director-console] {
     background: #090b10;
+}
+
+.discussion-reaction.is-active {
+    border-color: #fecdd3;
+    background: #fff1f2;
+    color: #be123c;
+}
+
+.discussion-reaction.is-active[data-reaction-kind="love"] svg {
+    fill: currentColor;
+}
+
+.discussion-reaction.is-pending {
+    opacity: 0.6;
 }
 
 .sale-takeover {

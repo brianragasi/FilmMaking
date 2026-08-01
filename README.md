@@ -15,7 +15,7 @@ The storefront works in demo mode even before the database is imported. Orders a
 ## Pages
 
 - `index.php` - storefront, sale countdown, products, cart
-- `product.php` - product details, ratings, sortable discussions, and reactions
+- `product.php` - product details, ratings, sortable discussions, and no-refresh reactions
 - `checkout.php` - customer checkout and order save
 - `admin.php` - operations dashboard and safe fake terminal simulator
 - `director.php` - three filming cues, discussion moderation, and customer safety controls
@@ -39,4 +39,6 @@ The admin terminal is only a visual simulation. It does not run network commands
 
 Everyone can read product reviews. Registered customer accounts can post,
 toggle Helpful/Love/Funny reactions, and soft-delete only their own comments.
-The Director retains a separate moderation control for inappropriate posts.
+The Director retains a moderation workbench for inappropriate posts, with
+search, rating and product filters, account/storefront shortcuts, and single or
+bulk soft deletion.

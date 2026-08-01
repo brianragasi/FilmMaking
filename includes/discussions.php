@@ -189,6 +189,20 @@ function discussion_reaction_types(): array
     ];
 }
 
+function discussion_reaction_count(int $discussionId, string $reaction): int
+{
+    if ($discussionId <= 0 || !isset(discussion_reaction_types()[$reaction])) {
+        return 0;
+    }
+
+    $statement = db()->prepare(
+        'SELECT COUNT(*) FROM product_discussion_reactions
+         WHERE discussion_id = :discussion_id AND reaction = :reaction'
+    );
+    $statement->execute(['discussion_id' => $discussionId, 'reaction' => $reaction]);
+    return (int) $statement->fetchColumn();
+}
+
 function discussion_relative_time(string $createdAt): string
 {
     $timestamp = strtotime($createdAt);
@@ -451,12 +465,23 @@ function recent_product_discussions(int $limit = 40): array
     $limit = max(1, min(80, $limit));
     try {
         return db()->query(
-            "SELECT d.id, d.product_id, d.rating, d.body, d.created_at,
+            "SELECT d.id, d.product_id, d.user_id, d.rating, d.body, d.created_at,
                     u.name AS author_name, u.email AS author_email, u.avatar_style, u.avatar_path,
-                    p.name AS product_name
+                    p.name AS product_name,
+                    COALESCE(r.helpful_count, 0) AS helpful_count,
+                    COALESCE(r.love_count, 0) AS love_count,
+                    COALESCE(r.funny_count, 0) AS funny_count
              FROM product_discussions d
              INNER JOIN ecocart_users u ON u.id = d.user_id
              LEFT JOIN products p ON p.id = d.product_id
+             LEFT JOIN (
+                 SELECT discussion_id,
+                        SUM(reaction = 'helpful') AS helpful_count,
+                        SUM(reaction = 'love') AS love_count,
+                        SUM(reaction = 'funny') AS funny_count
+                 FROM product_discussion_reactions
+                 GROUP BY discussion_id
+             ) r ON r.discussion_id = d.id
              WHERE d.is_deleted = 0
              ORDER BY d.id DESC
              LIMIT {$limit}"
@@ -647,7 +672,12 @@ function toggle_product_discussion_reaction(array $user, int $discussionId, int 
                  WHERE discussion_id = :discussion_id AND user_id = :user_id AND reaction = :reaction'
             );
             $delete->execute($parameters);
-            return ['ok' => true, 'message' => 'Reaction removed.'];
+            return [
+                'ok' => true,
+                'message' => 'Reaction removed.',
+                'active' => false,
+                'count' => discussion_reaction_count($discussionId, $reaction),
+            ];
         }
 
         $insert = $pdo->prepare(
@@ -655,7 +685,12 @@ function toggle_product_discussion_reaction(array $user, int $discussionId, int 
              VALUES (:discussion_id, :user_id, :reaction)'
         );
         $insert->execute($parameters);
-        return ['ok' => true, 'message' => 'Reaction added.'];
+        return [
+            'ok' => true,
+            'message' => 'Reaction added.',
+            'active' => true,
+            'count' => discussion_reaction_count($discussionId, $reaction),
+        ];
     } catch (Throwable $error) {
         error_log('[EcoCart discussion reaction] ' . $error->getMessage());
         return ['ok' => false, 'message' => 'That reaction could not be saved.'];
@@ -695,23 +730,35 @@ function delete_own_product_discussion(array $user, int $discussionId, int $prod
 
 function delete_product_discussion(array $director, int $discussionId): bool
 {
-    if ((string) ($director['role'] ?? '') !== 'director' || $discussionId <= 0 || !discussion_schema_ready()) {
-        return false;
+    return delete_product_discussions($director, [$discussionId]) === 1;
+}
+
+function delete_product_discussions(array $director, array $discussionIds): int
+{
+    if ((string) ($director['role'] ?? '') !== 'director' || !discussion_schema_ready()) {
+        return 0;
+    }
+
+    $discussionIds = array_values(array_unique(array_filter(
+        array_map('intval', $discussionIds),
+        static fn (int $id): bool => $id > 0
+    )));
+    $discussionIds = array_slice($discussionIds, 0, 80);
+    if (!$discussionIds) {
+        return 0;
     }
 
     try {
+        $placeholders = implode(',', array_fill(0, count($discussionIds), '?'));
         $statement = db()->prepare(
-            'UPDATE product_discussions
-             SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, deleted_by = :deleted_by
-             WHERE id = :id AND is_deleted = 0'
+            "UPDATE product_discussions
+             SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, deleted_by = ?
+             WHERE id IN ({$placeholders}) AND is_deleted = 0"
         );
-        $statement->execute([
-            'deleted_by' => (string) ($director['email'] ?? 'director'),
-            'id' => $discussionId,
-        ]);
-        return $statement->rowCount() === 1;
+        $statement->execute(array_merge([(string) ($director['email'] ?? 'director')], $discussionIds));
+        return $statement->rowCount();
     } catch (Throwable $error) {
         error_log('[EcoCart discussion delete] ' . $error->getMessage());
-        return false;
+        return 0;
     }
 }

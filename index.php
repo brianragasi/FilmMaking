@@ -15,6 +15,13 @@ if (scene_is_outage($sceneState)) {
 $products = products();
 $discussionSummary = product_discussion_summary();
 $currentUser = current_user();
+if ($currentUser) {
+    $currentUser = refresh_authenticated_user($currentUser);
+}
+$headerProfile = $currentUser && (string) ($currentUser['role'] ?? '') === 'customer'
+    ? customer_profile($currentUser)
+    : null;
+$headerAvatar = $headerProfile ? profile_avatar_url($headerProfile) : null;
 $accountName = $currentUser ? trim(explode(' ', (string) $currentUser['name'])[0] ?? (string) $currentUser['name']) : '';
 $departments = [
     ['name' => 'School', 'filter' => 'students', 'label' => 'Student picks', 'icon' => 'graduation-cap', 'tone' => 'bg-cyan-50 text-cyan-700'],
@@ -111,7 +118,7 @@ $storyPicks = array_slice($products, 0, 6);
 
             <nav class="ml-auto flex items-center gap-2 sm:gap-4" aria-label="Customer actions">
                 <a class="flex items-center gap-2 text-left text-xs font-bold text-slate-700 transition hover:text-rose-600" href="<?= $currentUser ? 'account.php' : 'login.php' ?>" aria-label="<?= $currentUser ? 'Open my account' : 'Sign in' ?>">
-                    <span class="grid h-9 w-9 place-items-center rounded-lg bg-slate-100"><i data-lucide="user-round" class="h-5 w-5"></i></span>
+                    <span class="h-9 w-9 shrink-0 overflow-hidden rounded-lg <?= $headerProfile ? htmlspecialchars(avatar_class((string) $headerProfile['avatar_style'])) : 'bg-slate-100' ?>"><?php if ($headerAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($headerAvatar) ?>" alt="<?= htmlspecialchars((string) $currentUser['name']) ?> profile picture"><?php elseif ($headerProfile): ?><span class="grid h-full w-full place-items-center font-black"><?= htmlspecialchars(profile_initial((string) $headerProfile['name'])) ?></span><?php else: ?><span class="grid h-full w-full place-items-center"><i data-lucide="user-round" class="h-5 w-5"></i></span><?php endif; ?></span>
                     <span class="hidden xl:block">
                         <span class="block text-[10px] font-semibold text-slate-400"><?= $currentUser ? 'Welcome, ' . htmlspecialchars($accountName) : 'Welcome' ?></span>
                         <?= $currentUser ? 'My account' : 'Sign in' ?>

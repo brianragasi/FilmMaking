@@ -10,6 +10,11 @@ auth_no_store();
 
 $sceneState = read_scene_state();
 $recentDiscussions = recent_product_discussions();
+$moderationProducts = [];
+foreach ($recentDiscussions as $moderationComment) {
+    $moderationProducts[(int) $moderationComment['product_id']] = (string) ($moderationComment['product_name'] ?: 'Product #' . $moderationComment['product_id']);
+}
+asort($moderationProducts, SORT_NATURAL | SORT_FLAG_CASE);
 $customerProfiles = director_customer_profiles();
 $customerNotice = isset($_SESSION['director_customer_notice']) && is_array($_SESSION['director_customer_notice'])
     ? $_SESSION['director_customer_notice']
@@ -174,42 +179,53 @@ $currentCue = isset($cueScripts[$sceneState['cue']])
         <details class="mt-5 overflow-hidden rounded-lg border border-white/10 bg-[#151820]" id="moderation" <?= isset($_GET['moderation']) || $directorNotice ? 'open' : '' ?>>
             <summary class="flex cursor-pointer list-none items-center gap-4 p-5 sm:p-6">
                 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300"><i data-lucide="messages-square" class="h-5 w-5"></i></span>
-                <span class="min-w-0 flex-1">
-                    <strong class="block font-black">Discussion moderation</strong>
-                    <span class="mt-1 block text-xs text-slate-500">Review and remove customer comments when needed.</span>
-                </span>
+                <span class="min-w-0 flex-1"><strong class="block font-black">Discussion moderation</strong><span class="mt-1 block text-xs text-slate-500">Search, review, open, and remove storefront comments.</span></span>
                 <span class="rounded bg-white/5 px-2.5 py-1 text-xs font-black text-slate-300"><?= count($recentDiscussions) ?></span>
                 <i data-lucide="chevron-down" class="h-5 w-5 text-slate-500"></i>
             </summary>
 
             <div class="border-t border-white/10 p-4 sm:p-5">
-                <?php if ($directorNotice): ?>
-                    <div class="mb-4 rounded-lg border p-3 text-sm font-bold <?= $directorNotice['tone'] === 'success' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-rose-400/25 bg-rose-400/10 text-rose-200' ?>" role="status"><?= htmlspecialchars((string) $directorNotice['message']) ?></div>
-                <?php endif; ?>
+                <?php if ($directorNotice): ?><div class="mb-4 rounded-lg border p-3 text-sm font-bold <?= $directorNotice['tone'] === 'success' ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-rose-400/25 bg-rose-400/10 text-rose-200' ?>" role="status"><?= htmlspecialchars((string) $directorNotice['message']) ?></div><?php endif; ?>
 
                 <?php if ($recentDiscussions): ?>
-                    <div class="grid gap-2">
+                    <div class="grid gap-3 rounded-lg border border-white/10 bg-black/20 p-3 lg:grid-cols-[minmax(220px,1fr)_180px_220px_auto]">
+                        <label class="relative"><i data-lucide="search" class="pointer-events-none absolute left-3 top-3 h-4 w-4 text-slate-500"></i><input class="input h-10 min-h-10 w-full rounded-lg border-white/10 bg-[#0d1016] pl-10 text-sm text-white placeholder:text-slate-600 focus:border-cyan-400 focus:outline-none" type="search" placeholder="Search customer, product, or comment" data-moderation-search></label>
+                        <select class="select h-10 min-h-10 w-full rounded-lg border-white/10 bg-[#0d1016] text-sm text-white" data-moderation-rating aria-label="Filter by rating"><option value="all">All ratings</option><option value="low">1-2 stars</option><option value="3">3 stars</option><option value="high">4-5 stars</option></select>
+                        <select class="select h-10 min-h-10 w-full rounded-lg border-white/10 bg-[#0d1016] text-sm text-white" data-moderation-product aria-label="Filter by product"><option value="all">All products</option><?php foreach ($moderationProducts as $moderationProductId => $moderationProductName): ?><option value="<?= $moderationProductId ?>"><?= htmlspecialchars($moderationProductName) ?></option><?php endforeach; ?></select>
+                        <button class="btn btn-sm min-h-10 border-white/10 bg-white/5 text-slate-300 hover:border-cyan-400" type="button" data-moderation-clear><i data-lucide="list-restart" class="h-4 w-4"></i> Clear</button>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2.5">
+                        <button class="btn btn-sm border-white/10 bg-white/5 text-slate-300" type="button" data-moderation-select-visible><i data-lucide="list-checks" class="h-4 w-4"></i> Select visible</button>
+                        <p class="text-xs font-bold text-slate-500"><span class="text-slate-200" data-moderation-visible-count><?= count($recentDiscussions) ?></span> shown &middot; <span class="text-cyan-300" data-moderation-selected-count>0</span> selected</p>
+                        <form class="ml-auto" id="moderation-bulk-form" method="post" action="director-discussion-action.php" data-moderation-bulk-form>
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
+                            <button class="btn btn-sm border-rose-400/25 bg-rose-400/10 text-rose-200 disabled:text-slate-600" type="submit" disabled data-moderation-bulk-delete><i data-lucide="trash-2" class="h-4 w-4"></i> Remove selected</button>
+                        </form>
+                    </div>
+
+                    <div class="mt-3 grid gap-2" data-moderation-list>
                         <?php foreach ($recentDiscussions as $comment): ?>
-                            <?php $commentAvatar = profile_avatar_url($comment); ?>
-                            <article class="flex flex-col gap-4 rounded-lg border border-white/10 bg-black/20 p-4 sm:flex-row sm:items-start">
-                                <span class="h-10 w-10 shrink-0 overflow-hidden rounded-lg text-sm font-black <?= htmlspecialchars(avatar_class((string) $comment['avatar_style'])) ?>"><?php if ($commentAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($commentAvatar) ?>" alt=""><?php else: ?><span class="grid h-full w-full place-items-center"><?= htmlspecialchars(profile_initial((string) $comment['author_name'])) ?></span><?php endif; ?></span>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        <p class="text-sm font-black"><?= htmlspecialchars((string) $comment['author_name']) ?></p>
-                                        <span class="text-[10px] font-bold text-cyan-300"><?= htmlspecialchars((string) ($comment['product_name'] ?: 'Product #' . $comment['product_id'])) ?></span>
-                                        <span class="flex items-center text-amber-300"><?php for ($star = 1; $star <= 5; $star++): ?><i data-lucide="star" class="h-3 w-3 <?= (int) $comment['rating'] >= $star ? 'fill-current' : '' ?>"></i><?php endfor; ?></span>
+                            <?php $commentAvatar = profile_avatar_url($comment); $reactionTotal = (int) $comment['helpful_count'] + (int) $comment['love_count'] + (int) $comment['funny_count']; $searchText = strtolower((string) $comment['author_name'] . ' ' . (string) $comment['author_email'] . ' ' . (string) ($comment['product_name'] ?: '') . ' ' . (string) $comment['body']); ?>
+                            <article class="rounded-lg border border-white/10 bg-black/20" data-moderation-item data-moderation-search-text="<?= htmlspecialchars($searchText) ?>" data-moderation-rating-value="<?= (int) $comment['rating'] ?>" data-moderation-product-value="<?= (int) $comment['product_id'] ?>">
+                                <div class="flex items-start gap-3 p-4">
+                                    <label class="mt-3 grid h-5 w-5 shrink-0 cursor-pointer place-items-center" title="Select comment"><input class="checkbox checkbox-sm border-slate-600" type="checkbox" name="discussion_ids[]" value="<?= (int) $comment['id'] ?>" form="moderation-bulk-form" data-moderation-checkbox aria-label="Select comment by <?= htmlspecialchars((string) $comment['author_name']) ?>"></label>
+                                    <span class="h-11 w-11 shrink-0 overflow-hidden rounded-lg text-sm font-black <?= htmlspecialchars(avatar_class((string) $comment['avatar_style'])) ?>"><?php if ($commentAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($commentAvatar) ?>" alt=""><?php else: ?><span class="grid h-full w-full place-items-center"><?= htmlspecialchars(profile_initial((string) $comment['author_name'])) ?></span><?php endif; ?></span>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-x-2 gap-y-1"><p class="text-sm font-black"><?= htmlspecialchars((string) $comment['author_name']) ?></p><span class="rounded bg-emerald-400/10 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-300">Active</span><a class="text-[10px] font-bold text-cyan-300 hover:underline" href="product.php?id=<?= (int) $comment['product_id'] ?>#comment-<?= (int) $comment['id'] ?>" target="_blank" rel="noopener"><?= htmlspecialchars((string) ($comment['product_name'] ?: 'Product #' . $comment['product_id'])) ?></a><span class="flex items-center text-amber-300"><?php for ($star = 1; $star <= 5; $star++): ?><i data-lucide="star" class="h-3 w-3 <?= (int) $comment['rating'] >= $star ? 'fill-current' : '' ?>"></i><?php endfor; ?></span></div>
+                                        <p class="mt-2 text-sm leading-6 text-slate-300"><?= nl2br(htmlspecialchars((string) $comment['body'])) ?></p>
+                                        <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-600"><span><?= htmlspecialchars((string) $comment['author_email']) ?></span><span>&middot;</span><time><?= htmlspecialchars(date('M j, g:i A', strtotime((string) $comment['created_at']))) ?></time><span>&middot;</span><?php if ($reactionTotal > 0): ?><span class="flex items-center gap-2 text-slate-400"><span><i data-lucide="thumbs-up" class="mr-1 inline h-3 w-3"></i><?= (int) $comment['helpful_count'] ?></span><span><i data-lucide="heart" class="mr-1 inline h-3 w-3"></i><?= (int) $comment['love_count'] ?></span><span><i data-lucide="smile" class="mr-1 inline h-3 w-3"></i><?= (int) $comment['funny_count'] ?></span></span><?php else: ?><span>No reactions</span><?php endif; ?></div>
                                     </div>
-                                    <p class="mt-2 text-sm leading-6 text-slate-300"><?= nl2br(htmlspecialchars((string) $comment['body'])) ?></p>
-                                    <p class="mt-2 text-[10px] text-slate-600"><?= htmlspecialchars((string) $comment['author_email']) ?> &middot; <?= htmlspecialchars(date('M j, g:i A', strtotime((string) $comment['created_at']))) ?></p>
+                                    <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+                                        <a class="btn btn-square btn-sm border-white/10 bg-white/5 text-slate-400 hover:border-cyan-400 hover:text-cyan-300" href="product.php?id=<?= (int) $comment['product_id'] ?>#comment-<?= (int) $comment['id'] ?>" target="_blank" rel="noopener" aria-label="Open comment on storefront" title="Open on storefront"><i data-lucide="external-link" class="h-4 w-4"></i></a>
+                                        <a class="btn btn-square btn-sm border-white/10 bg-white/5 text-slate-400 hover:border-violet-400 hover:text-violet-300" href="director.php?customers=1#customer-<?= (int) $comment['user_id'] ?>" aria-label="Review customer account" title="Review customer"><i data-lucide="user-round-search" class="h-4 w-4"></i></a>
+                                        <form method="post" action="director-discussion-action.php" onsubmit="return confirm('Remove this comment from the storefront?');"><input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>"><input type="hidden" name="discussion_id" value="<?= (int) $comment['id'] ?>"><button class="btn btn-square btn-sm border-rose-400/25 bg-rose-400/10 text-rose-200 hover:border-rose-300 hover:bg-rose-400/20" type="submit" aria-label="Remove comment" title="Remove comment"><i data-lucide="trash-2" class="h-4 w-4"></i></button></form>
+                                    </div>
                                 </div>
-                                <form method="post" action="director-discussion-action.php" onsubmit="return confirm('Remove this comment from the storefront?');">
-                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(csrf_token()) ?>">
-                                    <input type="hidden" name="discussion_id" value="<?= (int) $comment['id'] ?>">
-                                    <button class="btn btn-sm w-full border-rose-400/25 bg-rose-400/10 text-rose-200 hover:border-rose-300 hover:bg-rose-400/20 sm:btn-square" type="submit" aria-label="Delete comment" title="Delete comment"><i data-lucide="trash-2" class="h-4 w-4"></i><span class="sm:hidden">Delete comment</span></button>
-                                </form>
                             </article>
                         <?php endforeach; ?>
                     </div>
+                    <div class="hidden py-8 text-center" data-moderation-empty><i data-lucide="search-x" class="mx-auto h-7 w-7 text-slate-600"></i><p class="mt-3 text-sm font-black">No comments match these filters.</p><p class="mt-1 text-xs text-slate-600">Clear the search or choose another rating or product.</p></div>
                 <?php else: ?>
                     <div class="py-8 text-center"><i data-lucide="message-circle-off" class="mx-auto h-7 w-7 text-slate-600"></i><p class="mt-3 text-sm font-black">No comments to moderate.</p><p class="mt-1 text-xs text-slate-600">New product discussions will appear here.</p></div>
                 <?php endif; ?>
@@ -233,7 +249,7 @@ $currentCue = isset($cueScripts[$sceneState['cue']])
                     <div class="grid gap-2" data-customer-list>
                         <?php foreach ($customerProfiles as $customer): ?>
                             <?php $customerAvatar = profile_avatar_url($customer); $isBanned = !empty($customer['is_banned']); ?>
-                            <article class="rounded-lg border <?= $isBanned ? 'border-rose-400/25 bg-rose-400/5' : 'border-white/10 bg-black/20' ?>" data-customer-item data-customer-search-text="<?= htmlspecialchars(strtolower((string) $customer['name'] . ' ' . (string) $customer['email'])) ?>">
+                            <article class="scroll-mt-5 rounded-lg border <?= $isBanned ? 'border-rose-400/25 bg-rose-400/5' : 'border-white/10 bg-black/20' ?>" id="customer-<?= (int) $customer['id'] ?>" data-customer-item data-customer-search-text="<?= htmlspecialchars(strtolower((string) $customer['name'] . ' ' . (string) $customer['email'])) ?>">
                                 <div class="flex flex-wrap items-center gap-3 p-4">
                                     <div class="h-11 w-11 shrink-0 overflow-hidden rounded-lg <?= htmlspecialchars(avatar_class((string) $customer['avatar_style'])) ?>"><?php if ($customerAvatar): ?><img class="h-full w-full object-cover" src="<?= htmlspecialchars($customerAvatar) ?>" alt=""><?php else: ?><span class="grid h-full w-full place-items-center text-sm font-black"><?= htmlspecialchars(profile_initial((string) $customer['name'])) ?></span><?php endif; ?></div>
                                     <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><p class="truncate text-sm font-black"><?= htmlspecialchars((string) $customer['name']) ?></p><span class="rounded px-2 py-0.5 text-[9px] font-black uppercase <?= $isBanned ? 'bg-rose-400/15 text-rose-300' : 'bg-emerald-400/10 text-emerald-300' ?>"><?= $isBanned ? 'Suspended' : 'Active' ?></span></div><p class="mt-0.5 truncate text-[11px] text-slate-500"><?= htmlspecialchars((string) $customer['email']) ?></p></div>
