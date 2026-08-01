@@ -63,7 +63,9 @@ The filmed checkout sequence is now explicit:
 2. Sarah fills a valid cart and presses **Place order**.
 3. Checkout stays on the endless loading screen and does not create an order.
 4. The Director presses **Shut down website**.
-5. Sarah's open screen automatically fills with **SERVER ERROR. PLEASE TRY AGAIN.**
+5. Sarah's open screen remains on the endless loading state.
+6. Sarah manually refreshes the browser.
+7. The refreshed request displays **SERVER ERROR. PLEASE TRY AGAIN.**
 
 The browser changes its application display only. GoogieHost remains online,
 and the scene does not generate artificial traffic.

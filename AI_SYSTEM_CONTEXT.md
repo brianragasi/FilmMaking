@@ -77,11 +77,14 @@ scene controls.
   **SALE IS LIVE!** announcement, keeps the sale ribbon active, and arms the
   scripted checkout freeze. A valid Place Order click then shows the endless
   checkout spinner without submitting an order.
-- `outage`: customer screens automatically show the fictional HTTP 503 page.
+- `outage`: already-open storefront and checkout pages stay visually unchanged.
+  If checkout is submitted, its loading screen spins indefinitely. The actor's
+  manual browser refresh then requests PHP again and shows the fictional HTTP
+  503 page. This preserves the screenplay's freeze-then-refresh beat.
 
-Customers do not need to refresh manually. The lightweight public GET request
-to `scene-state.php` synchronizes screens. These cues only alter application
-output; GoogieHost remains online.
+The lightweight public GET request to `scene-state.php` synchronizes the cue,
+but it must not replace an already-open customer page during `outage`. These
+cues only alter application output; GoogieHost remains online.
 
 ## Attacker Terminal
 
@@ -232,7 +235,8 @@ Also test these workflows in a browser:
 6. Confirm a Director cannot open `admin.php`.
 7. Confirm all three Director controls update customer screens.
 8. During `sale_live`, submit a valid cart and confirm checkout keeps spinning.
-9. Trigger `outage` and confirm the error fills that screen without a refresh.
+9. Trigger `outage` and confirm the open screen stays frozen, then manually
+   refresh and confirm the ERROR 503 page appears.
 10. Confirm guests can read but cannot post product comments.
 11. Confirm a customer can post and the Director can remove the comment.
 12. Confirm a customer can toggle each reaction and cannot delete another

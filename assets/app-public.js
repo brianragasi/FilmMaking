@@ -764,7 +764,7 @@ function bootTerminal() {
     startButton.disabled = true;
     startButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Trace active';
     command('edgectl monitor --live --routes /products,/cart,/checkout');
-    line('[+] edge telemetry stream attached â†’ /products /cart /checkout', 'ok');
+    line('[+] edge telemetry stream attached -> /products /cart /checkout', 'ok');
     line('[*] baseline locked: 2,340 req/min | p95 184ms | err 0.18%', 'info');
     setIncidentVisual('warning', 'Watching live traffic', 'Monitoring', 'Traffic will be compared with the normal sale-event level.');
     drawBars('healthy');
@@ -831,7 +831,7 @@ function bootTerminal() {
       verify: 'filtered',
     };
     if (stage !== expected[name]) {
-      line('[!] pipeline busy â†’ await current stage completion', 'warn');
+      line('[!] pipeline busy -> await current stage completion', 'warn');
       return;
     }
 
@@ -974,9 +974,9 @@ function bootTerminal() {
       serviceSummary.className = 'rounded bg-emerald-400/15 px-2 py-1 text-[10px] font-black uppercase text-emerald-300';
       setImpact('Restored', 'text-emerald-400', '0 affected');
       setIncidentVisual('healthy', 'Production services restored', 'Resolved', 'Website, saved carts, and checkout tests have passed.');
-      line('[+] GET /products â†’ HTTP 200 | 142ms | synthetic probe passed', 'ok');
+      line('[+] GET /products -> HTTP 200 | 142ms | synthetic probe passed', 'ok');
       line('[+] session store intact | cart payloads persisted', 'ok');
-      line('[+] POST /checkout â†’ HTTP 201 | 196ms | order committed', 'ok');
+      line('[+] POST /checkout -> HTTP 201 | 196ms | order committed', 'ok');
       line('[+] incident closed | mitigation persistent | watch window 30m', 'ok');
       markComplete('verify');
       drawBars('healthy');
@@ -1001,11 +1001,8 @@ function bootTerminal() {
     completedSteps = 0;
     setSystemState('healthy');
     terminal.innerHTML = '';
-    command('systemctl status ecocart.target');
-    line('[+] ecocart.web.service â†’ active (running)', 'ok');
-    line('[+] ecocart.cart.service â†’ active (running)', 'ok');
-    line('[+] ecocart.checkout.service â†’ active (running)', 'ok');
-    line('[*] ingress 2,340 req/min | p95 184ms | err 0.18% | nominal', 'info');
+    line('EcoCart production shell ready.', 'ok');
+    line('No active trace. Awaiting command.', 'info');
     setMetrics();
     routes.products.textContent = '742 rpm';
     routes.cart.textContent = '316 rpm';
@@ -1239,7 +1236,7 @@ function bootCheckoutGuard() {
       return;
     }
 
-    if (document.body.dataset.sceneCue === 'sale_live') {
+    if (['sale_live', 'outage'].includes(document.body.dataset.sceneCue)) {
       event.preventDefault();
       const loadingScreen = document.querySelector('[data-scene-loading]');
       const submitButton = form.querySelector('[data-place-order]');

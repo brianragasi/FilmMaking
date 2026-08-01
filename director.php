@@ -49,8 +49,8 @@ $cueScripts = [
         'icon' => 'server-crash',
         'button' => 'Shut down website',
         'title' => 'Website is down',
-        'short' => 'Customer screens switch to the EcoCart server-error scene.',
-        'result' => 'The storefront is replaced by the filmed ERROR 503 screen.',
+        'short' => 'Open pages stay frozen; the next refresh shows the server error.',
+        'result' => 'Sarah refreshes her frozen checkout and the filmed ERROR 503 screen appears.',
         'tone' => 'amber',
     ],
 ];
@@ -162,7 +162,7 @@ $currentCue = isset($cueScripts[$sceneState['cue']])
                         </span>
                         <div>
                             <p class="text-xs font-black">Remote connected</p>
-                            <p class="mt-0.5 text-[10px] text-slate-500">Customer screens update automatically.</p>
+                            <p class="mt-0.5 text-[10px] text-slate-500">The filming cue is synced to customer sessions.</p>
                         </div>
                     </div>
                 </div>

@@ -14,7 +14,7 @@ function scene_cues(): array
         ],
         'outage' => [
             'label' => 'Website down',
-            'short' => 'Customer screens display the EcoCart server-error scene.',
+            'short' => 'The next customer refresh displays the EcoCart server-error scene.',
         ],
     ];
 }
