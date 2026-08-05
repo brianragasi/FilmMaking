@@ -1,244 +1,166 @@
-# EcoCart Admin and Attacker Scene
+# EcoCart Admin and Attacker Scene Guide
 
-This focused version uses only the Attacker, Server Admin 1, and Server Admin 2.
-The commands are shown on screen but are not spoken aloud. Actors only say the
-short dialogue after each console response appears.
+This guide matches the commands currently shown by the SWARMGRID C2 Electron
+app and the EcoCart Production Console. Both terminals are cinematic
+simulations. They do not execute shell commands, send network traffic, or
+control GoogieHost.
 
-Every command below is written in real command-line style (`systemctl`,
-`edgectl`, `wafctl`, `trafficctl`, and so on) so the screens look like genuine
-operations and attack tooling on camera. Both the commands **and** the console
-responses read as technical output on screen — the audience follows the story
-through the actors' spoken dialogue, not by reading the terminal. These commands
-and readouts match exactly what appears on `admin.php` and the Traffic Control
-terminal, so treat this file as the on-screen script.
+## How the typing works
 
-## Screens
+- Press ordinary keys and the next scripted command appears naturally.
+- The command runs automatically when it is complete, or the actor can press
+  Enter.
+- The output appears by itself. Actors only need to remember the short spoken
+  cue for each beat.
+- Use the reset icon before another take.
 
-- Server admins use `admin.php` on the deployed EcoCart website.
-- The attacker opens `/traffic-control` on the same deployed website, then uses
-  the full-screen icon in the top bar so the browser address bar is not visible
-  during filming. The attacker tool is branded `SWARMGRID C2` on screen (a
-  fictional botnet command-and-control console), with an anonymous-mask icon.
-- Open both before the take so their state changes can stay synchronized.
+## Attacker scene: SWARMGRID C2
 
-## Keyboard Rule
+Open the installed SWARMGRID C2 desktop app. The selected target must read
+`ecocart.whf.bz`.
 
-- Open the required screen.
-- Press any random keys. The correct command appears automatically.
-- Press Enter at any point.
-- Wait for the console response before speaking.
-- The reset icon prepares both screens for another take.
+### 1. Select EcoCart
 
-## Scene 1 - Unknown Room
+Command:
 
-The ATTACKER sits in a dark room. Four device groups are represented by signs
-or screens labeled REQUEST, REFRESH, CONNECT, and LOAD PAGE.
+```text
+swarm target add --name ecocart --url https://ecocart.whf.bz --routes products,cart,checkout
+```
 
-ATTACKER
+What the screen means: EcoCart and the three customer routes are loaded into
+the campaign. No requests have started yet.
 
-Let's see how their server handles this.
+Attacker cue: "EcoCart is selected. Products, cart, and checkout."
 
-The Attacker types random keys. The screen first selects the deployed EcoCart
-website:
+### 2. Attach the device pool
 
-`targetctl select --host [deployed EcoCart host] --service ecocart`
+Command:
 
-The console reports `Target vector locked: ecocart.ecommerce`. The Attacker
-types again:
+```text
+swarm nodes attach --campaign blackout --pool device-48
+```
 
-`nodectl attach --pool device-48 --groups req,refresh,connect,page`
+What the screen means: 48 simulated device sessions are divided among request,
+refresh, connect, and page-load groups.
 
-The console reports `Botnet handshake OK | 48/48 zombies beaconing` and `SYN
-cannons armed`. The four groups raise their devices or signs.
+Attacker cue: "All forty-eight are connected."
 
-ATTACKER
+### 3. Start the campaign
 
-All connected.
+Command:
 
-The Attacker types again:
+```text
+swarm campaign start blackout --profile repeated-web --ramp
+```
 
-`trafficctl run --target ecocart --routes /products,/cart,/checkout --ramp`
+What the screen means: repeated web requests begin and rise in stages. The
+rate, accepted count, and rejected count update on screen.
 
-The output begins at 2,400 requests per minute and gradually rises. The four
-groups repeat their movements faster each time the number increases.
+Attacker cue: "Start it. Let the traffic climb."
 
-## Scene 2 - EcoCart IT Office
+### 4. Increase the rate
 
-SERVER ADMIN 1 is already watching the production dashboard. The console opens
-on the system status check:
+Command:
 
-`systemctl status ecocart.target`
+```text
+swarm campaign scale blackout --rate 92000rpm
+```
 
-The console shows the three services as `active (running)` and the ingress
-baseline at 2,340 req/min. SERVER ADMIN 1 types again to attach the live trace:
+What the screen means: the simulated request rate reaches 92,000 per minute;
+checkout timeouts and service errors appear.
 
-`edgectl monitor --live --routes /products,/cart,/checkout`
+Attacker cue: "Push it higher."
 
-SERVER ADMIN 1
+### 5. Hold the rate
 
-Normal pa ang traffic. Website, cart, and checkout are ready.
+Command:
 
-The number rises to 3,200, then 4,900, then 7,400.
+```text
+swarm campaign hold blackout
+```
 
-SERVER ADMIN 1
+What the screen means: the campaign remains at the current rate while the
+attacker watches whether EcoCart starts rejecting requests.
 
-Traffic is climbing faster than normal sale traffic.
+Attacker cue: "Hold it there."
 
-It rises to 12,800 and then 24,100. Checkout begins slowing down.
+### 6. Stop and detach
 
-SERVER ADMIN 2
+Command:
 
-Checkout is starting to delay. Dili na ni normal customer activity.
+```text
+swarm campaign stop blackout --detach
+```
 
-The traffic reaches 43,800 and finally 68,420 requests per minute.
+What the screen means: the simulated workers stop and all device sessions are
+detached.
 
-SERVER ADMIN 1
+Attacker cue: "They are filtering us. Disconnect."
 
-We are at sixty-eight thousand requests per minute. Customers are already
-timing out.
+## Admin scene: EcoCart Production Console
 
-## Scene 3 - Find the Repeated Requests
+Open `admin.php`. The console begins empty except for `Awaiting command`, so no
+command appears to have been typed before the actor starts.
 
-SERVER ADMIN 2 types random keys:
+### 1. Watch live traffic
 
-`edgectl inspect --repeats --top 4`
+```text
+sudo /opt/ecocart/bin/traffic-watch --routes products,cart,checkout --follow
+```
 
-The console shows the repetition signature isolated across four source clusters
-— repeated `/checkout`, `/cart`, and `/products` hits.
+Admin cue: "I am watching the three customer routes. Traffic is rising above
+the sale baseline."
 
-SERVER ADMIN 2
+### 2. Find the repeated requests
 
-Most of the traffic is repeating the same actions. Real customers are still
-trying to get through.
+```text
+sudo /opt/ecocart/bin/request-top --window 90s --group source,route --limit 4
+```
 
-Cut to the Attacker. The Attacker types:
+Admin cue: "Eighty-two percent is repeating across four source groups. Real
+customers are still mixed in."
 
-`trafficctl rate --target ecocart --set 92000rpm`
+### 3. Check accounts and orders
 
-ATTACKER
+```text
+sudo /opt/ecocart/bin/integrity-check --scope accounts,orders --since 10m
+```
 
-Faster. Keep it going.
+Admin cue: "Accounts and orders are clean. This is an availability attack, not
+a data breach."
 
-The attacker console reports that EcoCart checkout is timing out. The Attacker
-types once more to lock the flood at that rate while the admins scramble:
+### 4. Apply the emergency policy
 
-`trafficctl hold --target ecocart`
+```text
+sudo /opt/ecocart/bin/edge-policy apply sale-emergency --match repeating --atomic
+```
 
-The console reports the attack will continue at the current rate.
+Admin cue: "Emergency limits are active. Repeated requests are being
+throttled."
 
-## Scene 4 - Check Customer Safety
+### 5. Enable traffic filtering
 
-SERVER ADMIN 1 types:
+```text
+sudo /opt/ecocart/bin/traffic-filter enable --profile sale-ddos --preserve sessions
+```
 
-`auditctl verify --scope accounts,orders`
+Admin cue: "Filtering is active. Clean customer sessions are being preserved."
 
-The console shows the auth-store audit and order-ledger checksum both clean — no
-unauthorized writes.
+### 6. Verify recovery
 
-SERVER ADMIN 1
+```text
+sudo /opt/ecocart/bin/smoke-test --host ecocart.whf.bz --routes storefront,cart,checkout --preserve-cart
+```
 
-Customer accounts and existing orders are safe. The attack is targeting the
-website's availability.
+Admin cue: "Storefront, cart, and checkout passed. Keep monitoring for thirty
+minutes."
 
-SERVER ADMIN 2
+## Continuity notes
 
-The fake requests are taking the space meant for real customers.
-
-## Scene 5 - Slow the Attack
-
-SERVER ADMIN 1 types:
-
-`ratectl limit --sources repeated --rate 40/10s`
-
-The console shows the token-bucket limiter armed on all ingress edges.
-
-SERVER ADMIN 1
-
-Rate limiting is active. Repeated requests are being slowed.
-
-The blocked-request counter begins increasing.
-
-SERVER ADMIN 2 types:
-
-`wafctl deploy --filter ddos --mode block`
-
-The console shows malicious traffic dropped and the checkout queue depth falling
-from 1,842 to 126.
-
-SERVER ADMIN 2
-
-Filtering is active. Clean customer traffic is returning to checkout.
-
-Cut to the attacker terminal. It shows the upstream WAF retaliating — packets
-scrubbed at the edge and most of the flood blackholed.
-
-ATTACKER
-
-They're filtering it.
-
-## Scene 6 - Verify Recovery
-
-SERVER ADMIN 2 types:
-
-`healthctl probe --routes storefront,cart,checkout`
-
-The console shows synthetic probe results:
-
-- `GET /products → HTTP 200` passed.
-- Session store intact — cart payloads persisted.
-- `POST /checkout → HTTP 201` order committed.
-
-SERVER ADMIN 2
-
-Website passed. Customer carts are still saved. Checkout is responding again.
-
-SERVER ADMIN 1
-
-Services restored. Keep monitoring for thirty minutes.
-
-Cut to the Attacker. The Attacker types:
-
-`trafficctl stop --target ecocart --all`
-
-The attacker screen drops to zero and the device groups lower their signs.
-
-## Command Reference
-
-Type random keys until each command fully appears, then press Enter. These are
-the exact on-screen commands, in order.
-
-Attacker terminal (Traffic Control):
-
-1. `targetctl select --host [deployed EcoCart host] --service ecocart`
-2. `nodectl attach --pool device-48 --groups req,refresh,connect,page`
-3. `trafficctl run --target ecocart --routes /products,/cart,/checkout --ramp`
-4. `trafficctl rate --target ecocart --set 92000rpm`
-5. `trafficctl hold --target ecocart`
-6. `trafficctl stop --target ecocart --all`
-
-Admin console (`admin.php`):
-
-1. `systemctl status ecocart.target`
-2. `edgectl monitor --live --routes /products,/cart,/checkout`
-3. `edgectl inspect --repeats --top 4`
-4. `auditctl verify --scope accounts,orders`
-5. `ratectl limit --sources repeated --rate 40/10s`
-6. `wafctl deploy --filter ddos --mode block`
-7. `healthctl probe --routes storefront,cart,checkout`
-
-## What Is Happening
-
-1. The attacker connects many controlled devices.
-2. Those devices repeatedly request EcoCart pages at the same time.
-3. Fake requests compete with legitimate customer requests.
-4. EcoCart checkout becomes slow and eventually times out.
-5. The admins identify the repeated traffic pattern.
-6. They confirm customer accounts and orders were not changed.
-7. Rate limiting slows sources that repeat too quickly.
-8. Traffic filtering separates suspicious requests from real customers.
-9. The admins test the website, saved carts, and checkout before declaring
-   recovery.
-
-The attacker console is fictional and does not send network traffic. It exists
-only to visualize the screenplay's REQUEST, REFRESH, CONNECT, and LOAD PAGE
-device groups.
+- The Electron app is local and display-only. It does not need internet access
+  for the scene.
+- `ecocart.whf.bz` is shown as the production target for continuity with the
+  GoogieHost scene.
+- Do not claim that SWARMGRID caused real traffic on the hosted website. The
+  Director controls the website's scripted outage separately.
+- Keep both computers' clocks and scene order consistent between shots.

@@ -763,7 +763,7 @@ function bootTerminal() {
     clearInterval(idleTimer);
     startButton.disabled = true;
     startButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Trace active';
-    command('edgectl monitor --live --routes /products,/cart,/checkout');
+    command('sudo /opt/ecocart/bin/traffic-watch --routes products,cart,checkout --follow');
     line('[+] edge telemetry stream attached → /products /cart /checkout', 'ok');
     line('[*] baseline locked: 2,340 req/min | p95 184ms | err 0.18%', 'info');
     setIncidentVisual('warning', 'Watching live traffic', 'Monitoring', 'Traffic will be compared with the normal sale-event level.');
@@ -772,11 +772,11 @@ function bootTerminal() {
     const trafficRamp = [
       { requests: 3200, errors: '0.24%', latency: '202 ms', checkout: 'Online', saturation: '23%', note: '>> ingress 3,200 req/min | conn/s climbing' },
       { requests: 4900, errors: '0.48%', latency: '248 ms', checkout: 'Online', saturation: '31%', note: '>> ingress 4,900 req/min | keep-alive pool filling' },
-      { requests: 7400, errors: '1.2%', latency: '390 ms', checkout: 'Slowing', saturation: '42%', note: '>> ingress 7,400 req/min | above sale envelope | SYN backlog rising' },
+      { requests: 7400, errors: '1.2%', latency: '390 ms', checkout: 'Slowing', saturation: '42%', note: '>> ingress=7,400 req/min | above sale baseline' },
       { requests: 12800, errors: '3.8%', latency: '820 ms', checkout: 'Slowing', saturation: '56%', note: '[!] p95 latency breach | checkout worker queue saturating' },
       { requests: 24100, errors: '9.6%', latency: '2.1 s', checkout: 'Degraded', saturation: '71%', note: '[!] ingress 24,100 req/min | anomalous request signature repeating' },
       { requests: 43800, errors: '19.4%', latency: '4.8 s', checkout: 'Degraded', saturation: '84%', note: '[!] checkout thread pool exhausted | 503s emitting' },
-      { requests: 68420, errors: '31.7%', latency: '8.9 s', checkout: 'Timing out', saturation: '96%', note: '[x] ingress 68,420 req/min | origin saturation 96% | L7 flood confirmed' },
+      { requests: 68420, errors: '31.7%', latency: '8.9 s', checkout: 'Timing out', saturation: '96%', note: '[x] ingress=68,420 req/min | checkout p95=8.9s | availability incident' },
     ];
     let rampPosition = 0;
     clearInterval(incidentTimer);
@@ -839,7 +839,7 @@ function bootTerminal() {
     setStepState(name, 'running');
 
     if (name === 'inspect') {
-      command('edgectl inspect --repeats --top 4');
+      command('sudo /opt/ecocart/bin/request-top --window 90s --group source,route --limit 4');
       await new Promise((resolve) => setTimeout(resolve, 850));
       sourceRows.forEach((row) => row.classList.remove('opacity-45'));
       sourceVerdicts.forEach((node) => {
@@ -847,31 +847,31 @@ function bootTerminal() {
         node.className = 'rounded bg-amber-400/15 px-2 py-1 text-[9px] font-black uppercase text-amber-300';
       });
       sourceCount.textContent = '4 repeating clusters';
-      line('[!] repetition signature isolated across 4 source ASNs', 'warn');
-      line('[*] /checkout x18,422 | /cart x16,108 | /products x14,977 hits', 'warn');
-      line('[*] automation ratio 82.4% | residual human traffic in stream', 'info');
+      line('[!] window=90s | repeated=82.4% | source clusters=4', 'warn');
+      line('[*] /checkout=18,422 | /cart=16,108 | /products=14,977', 'warn');
+      line('[*] legitimate customer sessions remain distributed', 'info');
       stage = 'inspected';
       markComplete('inspect', 'classify');
       primeCinematicInput();
     }
 
     if (name === 'classify') {
-      command('auditctl verify --scope accounts,orders');
+      command('sudo /opt/ecocart/bin/integrity-check --scope accounts,orders --since 10m');
       await new Promise((resolve) => setTimeout(resolve, 900));
       breachStatus.textContent = '0 auth anomalies';
       breachStatus.className = 'text-[10px] font-bold text-emerald-400';
       securityFinding.textContent = 'Vector=availability (L7 volumetric). Auth store and order ledger show no unauthorized writes or session-hijack indicators.';
       setIncidentVisual('danger', 'Availability attack confirmed', 'Critical', 'The website is being overwhelmed, but customer accounts and orders remain safe.');
-      line('[+] auth store audit → 0 anomalous sessions | tokens intact', 'ok');
-      line('[+] order ledger checksum verified → no unauthorized writes', 'ok');
-      line('[x] classification: volumetric L7 DDoS | vector=availability', 'error');
+      line('[+] accounts=clean | unusual sign-ins=0 | sessions intact', 'ok');
+      line('[+] orders=clean | unauthorized writes=0', 'ok');
+      line('[x] classification=availability incident | data exposure=none', 'error');
       stage = 'classified';
       markComplete('classify', 'limit');
       primeCinematicInput();
     }
 
     if (name === 'limit') {
-      command('ratectl limit --sources repeated --rate 40/10s');
+      command('sudo /opt/ecocart/bin/edge-policy apply sale-emergency --match repeating --atomic');
       await new Promise((resolve) => setTimeout(resolve, 1000));
       stage = 'limited';
       setSystemState('filtering');
@@ -891,15 +891,15 @@ function bootTerminal() {
       setServiceState(['app', 'checkout'], 'service-warning');
       serviceSummary.textContent = 'Filtering';
       serviceSummary.className = 'rounded bg-cyan-400/15 px-2 py-1 text-[10px] font-black uppercase text-cyan-300';
-      line('[+] token-bucket limiter armed on all ingress edges', 'ok');
-      line('[*] repeat offenders throttled → 40 req / 10s | 429 issuing', 'info');
+      line('[+] policy=sale-emergency committed | edge nodes=12/12', 'ok');
+      line('[*] repeating requests throttled | customer sessions preserved', 'info');
       markComplete('limit', 'scrub');
       drawBars('filtering');
       primeCinematicInput();
     }
 
     if (name === 'scrub') {
-      command('wafctl deploy --filter ddos --mode block');
+      command('sudo /opt/ecocart/bin/traffic-filter enable --profile sale-ddos --preserve sessions');
       await new Promise((resolve) => setTimeout(resolve, 1100));
       stage = 'scrubbed';
       sourceVerdicts.forEach((node, index) => {
@@ -921,9 +921,9 @@ function bootTerminal() {
       clearServiceStates();
       setServiceState(['waf'], 'service-filtering');
       setServiceState(['checkout'], 'service-warning');
-      line('[+] WAF scrubbing route engaged | mode=block | ddos ruleset live', 'ok');
-      line('[*] malicious dropped 57,600/min | clean forwarded 4,200/min', 'ok');
-      line('[*] checkout queue depth 1,842 → 126 | worker pool recovering', 'info');
+      line('[+] profile=sale-ddos active | suspicious=57,600/min dropped', 'ok');
+      line('[*] clean=4,200/min forwarded | customer sessions preserved', 'ok');
+      line('[*] checkout queue=1,842 -> 126 | response time recovering', 'info');
       setImpact('Retrying', 'text-amber-400', '12 retrying');
       markComplete('scrub', 'verify');
       clearInterval(telemetryTimer);
@@ -946,7 +946,7 @@ function bootTerminal() {
     }
 
     if (name === 'verify') {
-      command('healthctl probe --routes storefront,cart,checkout');
+      command('sudo /opt/ecocart/bin/smoke-test --host ecocart.whf.bz --routes storefront,cart,checkout --preserve-cart');
       await new Promise((resolve) => setTimeout(resolve, 1200));
       clearInterval(telemetryTimer);
       stage = 'recovered';
@@ -974,10 +974,10 @@ function bootTerminal() {
       serviceSummary.className = 'rounded bg-emerald-400/15 px-2 py-1 text-[10px] font-black uppercase text-emerald-300';
       setImpact('Restored', 'text-emerald-400', '0 affected');
       setIncidentVisual('healthy', 'Production services restored', 'Resolved', 'Website, saved carts, and checkout tests have passed.');
-      line('[+] GET /products → HTTP 200 | 142ms | synthetic probe passed', 'ok');
-      line('[+] session store intact | cart payloads persisted', 'ok');
-      line('[+] POST /checkout → HTTP 201 | 196ms | order committed', 'ok');
-      line('[+] incident closed | mitigation persistent | watch window 30m', 'ok');
+      line('[+] storefront HTTP 200 | 142ms | pass', 'ok');
+      line('[+] cart session preserved | pass', 'ok');
+      line('[+] checkout HTTP 201 | 196ms | pass', 'ok');
+      line('[+] incident resolved | monitoring window=30m', 'ok');
       markComplete('verify');
       drawBars('healthy');
       startButton.innerHTML = '<i data-lucide="check-circle-2" class="h-4 w-4"></i> Incident resolved';
@@ -1001,11 +1001,8 @@ function bootTerminal() {
     completedSteps = 0;
     setSystemState('healthy');
     terminal.innerHTML = '';
-    command('systemctl status ecocart.target');
-    line('[+] ecocart.web.service → active (running)', 'ok');
-    line('[+] ecocart.cart.service → active (running)', 'ok');
-    line('[+] ecocart.checkout.service → active (running)', 'ok');
-    line('[*] ingress 2,340 req/min | p95 184ms | err 0.18% | nominal', 'info');
+    line('EcoCart production shell ready.', 'ok');
+    line('No active trace. Awaiting command.', 'info');
     setMetrics();
     routes.products.textContent = '742 rpm';
     routes.cart.textContent = '316 rpm';
@@ -1053,27 +1050,27 @@ function bootTerminal() {
   function cinematicCommandForStage() {
     const commands = {
       idle: {
-        text: 'edgectl monitor --live --routes /products,/cart,/checkout',
+        text: 'sudo /opt/ecocart/bin/traffic-watch --routes products,cart,checkout --follow',
         action: () => startTrace(),
       },
       detected: {
-        text: 'edgectl inspect --repeats --top 4',
+        text: 'sudo /opt/ecocart/bin/request-top --window 90s --group source,route --limit 4',
         action: () => runAction('inspect'),
       },
       inspected: {
-        text: 'auditctl verify --scope accounts,orders',
+        text: 'sudo /opt/ecocart/bin/integrity-check --scope accounts,orders --since 10m',
         action: () => runAction('classify'),
       },
       classified: {
-        text: 'ratectl limit --sources repeated --rate 40/10s',
+        text: 'sudo /opt/ecocart/bin/edge-policy apply sale-emergency --match repeating --atomic',
         action: () => runAction('limit'),
       },
       limited: {
-        text: 'wafctl deploy --filter ddos --mode block',
+        text: 'sudo /opt/ecocart/bin/traffic-filter enable --profile sale-ddos --preserve sessions',
         action: () => runAction('scrub'),
       },
       scrubbed: {
-        text: 'healthctl probe --routes storefront,cart,checkout',
+        text: 'sudo /opt/ecocart/bin/smoke-test --host ecocart.whf.bz --routes storefront,cart,checkout --preserve-cart',
         action: () => runAction('verify'),
       },
     };
@@ -1232,7 +1229,7 @@ function bootAttackerConsole() {
   const fullscreenButton = document.querySelector('[data-terminal-fullscreen]');
   const nodes = [...document.querySelectorAll('[data-attacker-node]')];
   const bars = [...document.querySelectorAll('.attacker-bar')];
-  const targetHost = document.body.dataset.attackerTarget || window.location.host || 'ecocart.local';
+  const targetHost = document.body.dataset.attackerTarget || 'ecocart.whf.bz';
   let stage = 'idle';
   let commandIndex = 0;
   let executing = false;
@@ -1261,7 +1258,7 @@ function bootAttackerConsole() {
   }
 
   function command(text) {
-    line(text, 'info', 'operator@control:~$');
+    line(text, 'info', 'swarm@relay:~$');
   }
 
   function setAttackerStatus(label, tone = 'slate') {
@@ -1311,27 +1308,27 @@ function bootAttackerConsole() {
   function commandForStage() {
     const commands = {
       idle: {
-        text: `targetctl select --host ${targetHost} --service ecocart`,
+        text: `swarm target add --name ecocart --url https://${targetHost} --routes products,cart,checkout`,
         action: selectTarget,
       },
       targeted: {
-        text: 'nodectl attach --pool device-48 --groups req,refresh,connect,page',
+        text: 'swarm nodes attach --campaign blackout --pool device-48',
         action: connectGroups,
       },
       linked: {
-        text: 'trafficctl run --target ecocart --routes /products,/cart,/checkout --ramp',
+        text: 'swarm campaign start blackout --profile repeated-web --ramp',
         action: beginRequests,
       },
       running: {
-        text: 'trafficctl rate --target ecocart --set 92000rpm',
+        text: 'swarm campaign scale blackout --rate 92000rpm',
         action: increaseRequests,
       },
       surging: {
-        text: 'trafficctl hold --target ecocart',
+        text: 'swarm campaign hold blackout',
         action: holdRequests,
       },
       holding: {
-        text: 'trafficctl stop --target ecocart --all',
+        text: 'swarm campaign stop blackout --detach',
         action: disconnectGroups,
       },
     };
@@ -1352,35 +1349,35 @@ function bootAttackerConsole() {
   }
 
   async function selectTarget() {
-    command(`targetctl select --host ${targetHost} --service ecocart`);
+    command(`swarm target add --name ecocart --url https://${targetHost} --routes products,cart,checkout`);
     await new Promise((resolve) => setTimeout(resolve, 550));
     stage = 'targeted';
     targetDot.className = 'h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.8)]';
     targetState.textContent = 'Target selected';
     targetState.className = 'font-mono text-[9px] font-black uppercase text-rose-400';
-    line(`Target vector locked: ecocart.ecommerce [${targetHost}]`, 'warn');
-    line('[*] DNS resolved | ASN mapped | 3 endpoints fingerprinted: /products /cart /checkout', 'info');
-    line('[*] recon done | WAF: none | TLS 1.2 | :443 open | origin IP exposed', 'info');
+    line(`profile=ecocart host=${targetHost} transport=https state=ready`, 'warn');
+    line('[*] routes loaded: GET /products | POST /cart | POST /checkout', 'info');
+    line('[*] campaign target saved | no requests sent', 'info');
     primeInput();
   }
 
   async function connectGroups() {
-    command('nodectl attach --pool device-48 --groups req,refresh,connect,page');
+    command('swarm nodes attach --campaign blackout --pool device-48');
     await new Promise((resolve) => setTimeout(resolve, 650));
     stage = 'linked';
     setAttackerStatus('READY', 'cyan');
     deviceNode.textContent = '48';
     liveDot.className = 'h-2.5 w-2.5 rounded-full bg-cyan-400';
     setNodes('ready');
-    line('Botnet handshake OK | 48/48 zombies beaconing | IPs spoofed', 'ok');
-    line('[*] vector REQUEST: 12 sockets | REFRESH: 9 sockets | keep-alive pinned', 'info');
-    line('[*] vector CONNECT: 15 sockets | LOAD PAGE: 12 sockets | TTL randomized', 'info');
-    line('Payload staged | SYN cannons armed | awaiting fire command', 'ok');
+    line('campaign=blackout nodes=48/48 groups=4 state=ready', 'ok');
+    line('[*] REQUEST=12 | REFRESH=9 | CONNECT=15 | LOAD_PAGE=12', 'info');
+    line('[*] session pool prepared | concurrency=48 | keepalive=on', 'info');
+    line('workers attached | awaiting campaign start', 'ok');
     primeInput();
   }
 
   async function beginRequests() {
-    command('trafficctl run --target ecocart --routes /products,/cart,/checkout --ramp');
+    command('swarm campaign start blackout --profile repeated-web --ramp');
     stage = 'starting';
     primeInput();
     setAttackerStatus('ACTIVE', 'rose');
@@ -1388,8 +1385,8 @@ function bootAttackerConsole() {
     setNodes('active');
     document.body.classList.add('attacker-running');
     localStorage.setItem('ecocart_system_state', 'attack');
-    line('[!] L7 flood engaged | GET storm on /products /cart /checkout', 'error');
-    line('[!] 48 zombies spraying packets | X-Forwarded-For rotating | pps climbing', 'warn');
+    line(`[!] campaign=blackout state=running target=${targetHost}`, 'error');
+    line('[*] profile=repeated-web concurrency=48 rate=ramping', 'warn');
 
     const ramp = [2400, 4200, 7100, 12800, 24600, 43800, 68400];
     let position = 0;
@@ -1402,35 +1399,35 @@ function bootAttackerConsole() {
       rejected += Math.round(batch * 0.08);
       drawAttackerBars(Math.round((requestRate / 68400) * 100));
       updateCounters();
-      line(`>> TX flood: ${requestRate.toLocaleString()} req/min | pps rising`, requestRate < 10000 ? 'info' : requestRate < 40000 ? 'warn' : 'error');
+      line(`>> rate=${requestRate.toLocaleString()} req/min | accepted=${accepted.toLocaleString()} | rejected=${rejected.toLocaleString()}`, requestRate < 10000 ? 'info' : requestRate < 40000 ? 'warn' : 'error');
       position += 1;
       if (position >= ramp.length) {
         clearInterval(activityTimer);
         stage = 'running';
-        line('[!] origin RTT spiking | conn pool exhausted | 503 cascade | half-open flood', 'warn');
+        line('[!] checkout p95 exceeded 8s | HTTP 503 responses rising', 'warn');
         primeInput();
       }
     }, 1100);
   }
 
   async function increaseRequests() {
-    command('trafficctl rate --target ecocart --set 92000rpm');
+    command('swarm campaign scale blackout --rate 92000rpm');
     await new Promise((resolve) => setTimeout(resolve, 700));
     stage = 'surging';
     requestRate = 92000;
-    line('[!] amplification engaged | 92,000 req/min sustained | uplink saturated', 'error');
-    line('[x] checkout gateway flatlined | TCP handshakes dropping | 0 ACK returned', 'error');
+    line('[!] campaign=blackout rate=92,000 req/min concurrency=48', 'error');
+    line('[x] checkout timeout threshold reached | service errors increasing', 'error');
     drawAttackerBars(100);
     updateCounters();
     primeInput();
   }
 
   async function holdRequests() {
-    command('trafficctl hold --target ecocart');
+    command('swarm campaign hold blackout');
     await new Promise((resolve) => setTimeout(resolve, 600));
     stage = 'holding';
     setAttackerStatus('HOLDING', 'amber');
-    line('[=] flood vector locked @ 92,000 req/min | zombies holding pattern', 'warn');
+    line('[=] campaign=blackout state=holding rate=92,000 req/min', 'warn');
     clearInterval(activityTimer);
     activityTimer = setInterval(() => {
       const filtering = localStorage.getItem('ecocart_system_state') === 'filtering';
@@ -1445,7 +1442,7 @@ function bootAttackerConsole() {
   }
 
   async function disconnectGroups() {
-    command('trafficctl stop --target ecocart --all');
+    command('swarm campaign stop blackout --detach');
     await new Promise((resolve) => setTimeout(resolve, 550));
     clearInterval(activityTimer);
     stage = 'closed';
@@ -1457,8 +1454,8 @@ function bootAttackerConsole() {
     setNodes('offline');
     drawAttackerBars(0);
     updateCounters();
-    line('[*] flood killed | sockets torn down | routes released', 'info');
-    line('[*] botnet detached | 0/48 zombies | logs purged | tracks wiped', 'info');
+    line('[*] campaign stopped | request workers drained | routes released', 'info');
+    line('[*] device sessions detached | connected=0 | state=closed', 'info');
     primeInput();
   }
 
@@ -1531,11 +1528,11 @@ function bootAttackerConsole() {
     setNodes('offline');
     drawAttackerBars(0);
     updateCounters();
-    command('trafficctl status');
-    line('>> SWARMGRID C2 v2.1.7 | distributed botnet orchestrator', 'ok');
-    line('[+] C2 relay online | tor circuit established | standby', 'ok');
-    line('[*] no target vector locked', 'info');
-    line('[*] botnet pool: 0/48 sockets bound', 'info');
+    command('swarm status');
+    line('>> SWARMGRID C2 v2.2.0 | campaign relay', 'ok');
+    line('[+] relay online | operator session authenticated | standby', 'ok');
+    line('[*] no campaign target selected', 'info');
+    line('[*] worker pool: 0/48 sessions attached', 'info');
     primeInput();
   }
 
@@ -1571,12 +1568,12 @@ function bootAttackerConsole() {
       return;
     }
     if (event.newValue === 'filtering') {
-      line('[!] upstream WAF retaliating | packets scrubbed at edge | RST storm inbound', 'error');
+      line('[!] target filtering active | accepted requests falling | rejections rising', 'error');
       setAttackerStatus('LIMITED', 'amber');
     }
     if (event.newValue === 'healthy') {
-      line('[!] target back online | mitigation holding | rate-limit walls up', 'warn');
-      line('[x] packets blackholed | zombies filtered | flood neutralized', 'warn');
+      line('[!] target recovered | filtering remains active', 'warn');
+      line('[x] campaign traffic rejected | customer routes responding', 'warn');
       setAttackerStatus('BLOCKED', 'rose');
     }
   });

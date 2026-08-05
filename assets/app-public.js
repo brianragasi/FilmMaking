@@ -844,16 +844,16 @@ function bootTerminal() {
     clearInterval(idleTimer);
     startButton.disabled = true;
     startButton.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Trace active';
-    command('edgectl monitor --live --routes /products,/cart,/checkout');
-    line('[+] edge telemetry stream attached -> /products /cart /checkout', 'ok');
-    line('[*] baseline locked: 2,340 req/min | p95 184ms | err 0.18%', 'info');
+    command('sudo /opt/ecocart/bin/traffic-watch --routes products,cart,checkout --follow');
+    line('[+] watch attached: nginx.access + checkout metrics', 'ok');
+    line('[*] baseline: 2,340 req/min | checkout p95 184ms | errors 0.18%', 'info');
     setIncidentVisual('warning', 'Watching live traffic', 'Monitoring', 'Traffic will be compared with the normal sale-event level.');
     drawBars('healthy');
     primeCinematicInput();
     const trafficRamp = [
-      { requests: 3200, errors: '0.24%', latency: '202 ms', checkout: 'Online', saturation: '23%', note: '>> ingress 3,200 req/min | conn/s climbing' },
-      { requests: 4900, errors: '0.48%', latency: '248 ms', checkout: 'Online', saturation: '31%', note: '>> ingress 4,900 req/min | keep-alive pool filling' },
-      { requests: 7400, errors: '1.2%', latency: '390 ms', checkout: 'Slowing', saturation: '42%', note: '>> ingress 7,400 req/min | above sale envelope | SYN backlog rising' },
+      { requests: 3200, errors: '0.24%', latency: '202 ms', checkout: 'Online', saturation: '23%', note: '>> ingress=3,200 req/min | checkout p95=202ms' },
+      { requests: 4900, errors: '0.48%', latency: '248 ms', checkout: 'Online', saturation: '31%', note: '>> ingress=4,900 req/min | checkout p95=248ms' },
+      { requests: 7400, errors: '1.2%', latency: '390 ms', checkout: 'Slowing', saturation: '42%', note: '>> ingress=7,400 req/min | above sale baseline' },
       { requests: 12800, errors: '3.8%', latency: '820 ms', checkout: 'Slowing', saturation: '56%', note: '[!] p95 latency breach | checkout worker queue saturating' },
       { requests: 24100, errors: '9.6%', latency: '2.1 s', checkout: 'Degraded', saturation: '71%', note: '[!] ingress 24,100 req/min | anomalous request signature repeating' },
       { requests: 43800, errors: '19.4%', latency: '4.8 s', checkout: 'Degraded', saturation: '84%', note: '[!] checkout thread pool exhausted | 503s emitting' },
@@ -920,7 +920,7 @@ function bootTerminal() {
     setStepState(name, 'running');
 
     if (name === 'inspect') {
-      command('edgectl inspect --repeats --top 4');
+      command('sudo /opt/ecocart/bin/request-top --window 90s --group source,route --limit 4');
       await new Promise((resolve) => setTimeout(resolve, 850));
       sourceRows.forEach((row) => row.classList.remove('opacity-45'));
       sourceVerdicts.forEach((node) => {
@@ -928,31 +928,31 @@ function bootTerminal() {
         node.className = 'rounded bg-amber-400/15 px-2 py-1 text-[9px] font-black uppercase text-amber-300';
       });
       sourceCount.textContent = '4 repeating clusters';
-      line('[!] repetition signature isolated across 4 source ASNs', 'warn');
-      line('[*] /checkout x18,422 | /cart x16,108 | /products x14,977 hits', 'warn');
-      line('[*] automation ratio 82.4% | residual human traffic in stream', 'info');
+      line('[!] window=90s | repeated=82.4% | source clusters=4', 'warn');
+      line('[*] /checkout=18,422 | /cart=16,108 | /products=14,977', 'warn');
+      line('[*] legitimate customer sessions remain distributed', 'info');
       stage = 'inspected';
       markComplete('inspect', 'classify');
       primeCinematicInput();
     }
 
     if (name === 'classify') {
-      command('auditctl verify --scope accounts,orders');
+      command('sudo /opt/ecocart/bin/integrity-check --scope accounts,orders --since 10m');
       await new Promise((resolve) => setTimeout(resolve, 900));
       breachStatus.textContent = '0 auth anomalies';
       breachStatus.className = 'text-[10px] font-bold text-emerald-400';
       securityFinding.textContent = 'Availability-only traffic surge. Auth store and order ledger show no unauthorized writes or session-hijack indicators.';
       setIncidentVisual('danger', 'Availability incident confirmed', 'Critical', 'The website is being overwhelmed, but customer accounts and orders remain safe.');
-      line('[+] auth store audit -> 0 anomalous sessions | tokens intact', 'ok');
-      line('[+] order ledger checksum verified -> no unauthorized writes', 'ok');
-      line('[x] classification: availability traffic surge | customer-data risk low', 'error');
+      line('[+] accounts=clean | unusual sign-ins=0 | sessions intact', 'ok');
+      line('[+] orders=clean | unauthorized writes=0', 'ok');
+      line('[x] classification=availability incident | data exposure=none', 'error');
       stage = 'classified';
       markComplete('classify', 'limit');
       primeCinematicInput();
     }
 
     if (name === 'limit') {
-      command('ratectl limit --sources repeated --rate 40/10s');
+      command('sudo /opt/ecocart/bin/edge-policy apply sale-emergency --match repeating --atomic');
       await new Promise((resolve) => setTimeout(resolve, 1000));
       stage = 'limited';
       setSystemState('filtering');
@@ -972,15 +972,15 @@ function bootTerminal() {
       setServiceState(['app', 'checkout'], 'service-warning');
       serviceSummary.textContent = 'Filtering';
       serviceSummary.className = 'rounded bg-cyan-400/15 px-2 py-1 text-[10px] font-black uppercase text-cyan-300';
-      line('[+] token-bucket limiter armed on all ingress edges', 'ok');
-      line('[*] repeated sources throttled -> 40 req / 10s | 429 issuing', 'info');
+      line('[+] policy=sale-emergency committed | edge nodes=12/12', 'ok');
+      line('[*] repeating requests throttled | customer sessions preserved', 'info');
       markComplete('limit', 'scrub');
       drawBars('filtering');
       primeCinematicInput();
     }
 
     if (name === 'scrub') {
-      command('edge-control apply sale-protection --mode filter');
+      command('sudo /opt/ecocart/bin/traffic-filter enable --profile sale-ddos --preserve sessions');
       await new Promise((resolve) => setTimeout(resolve, 1100));
       stage = 'filtered';
       sourceVerdicts.forEach((node, index) => {
@@ -1002,9 +1002,9 @@ function bootTerminal() {
       clearServiceStates();
       setServiceState(['waf'], 'service-filtering');
       setServiceState(['checkout'], 'service-warning');
-      line('[+] edge filtering engaged | customer sessions preserved', 'ok');
-      line('[*] repeated requests reduced 57,600/min | clean forwarded 4,200/min', 'ok');
-      line('[*] checkout queue depth 1,842 -> 126 | worker pool recovering', 'info');
+      line('[+] profile=sale-ddos active | suspicious=57,600/min dropped', 'ok');
+      line('[*] clean=4,200/min forwarded | customer sessions preserved', 'ok');
+      line('[*] checkout queue=1,842 -> 126 | response time recovering', 'info');
       setImpact('Retrying', 'text-amber-400', '12 retrying');
       markComplete('scrub', 'verify');
       clearInterval(telemetryTimer);
@@ -1027,7 +1027,7 @@ function bootTerminal() {
     }
 
     if (name === 'verify') {
-      command('healthctl probe --routes storefront,cart,checkout');
+      command('sudo /opt/ecocart/bin/smoke-test --host ecocart.whf.bz --routes storefront,cart,checkout --preserve-cart');
       await new Promise((resolve) => setTimeout(resolve, 1200));
       clearInterval(telemetryTimer);
       stage = 'recovered';
@@ -1055,10 +1055,10 @@ function bootTerminal() {
       serviceSummary.className = 'rounded bg-emerald-400/15 px-2 py-1 text-[10px] font-black uppercase text-emerald-300';
       setImpact('Restored', 'text-emerald-400', '0 affected');
       setIncidentVisual('healthy', 'Production services restored', 'Resolved', 'Website, saved carts, and checkout tests have passed.');
-      line('[+] GET /products -> HTTP 200 | 142ms | synthetic probe passed', 'ok');
-      line('[+] session store intact | cart payloads persisted', 'ok');
-      line('[+] POST /checkout -> HTTP 201 | 196ms | order committed', 'ok');
-      line('[+] incident closed | mitigation persistent | watch window 30m', 'ok');
+      line('[+] storefront HTTP 200 | 142ms | pass', 'ok');
+      line('[+] cart session preserved | pass', 'ok');
+      line('[+] checkout HTTP 201 | 196ms | pass', 'ok');
+      line('[+] incident resolved | monitoring window=30m', 'ok');
       markComplete('verify');
       drawBars('healthy');
       startButton.innerHTML = '<i data-lucide="check-circle-2" class="h-4 w-4"></i> Incident resolved';
@@ -1131,27 +1131,27 @@ function bootTerminal() {
   function cinematicCommandForStage() {
     const commands = {
       idle: {
-        text: 'edgectl monitor --live --routes /products,/cart,/checkout',
+        text: 'sudo /opt/ecocart/bin/traffic-watch --routes products,cart,checkout --follow',
         action: () => startTrace(),
       },
       detected: {
-        text: 'edgectl inspect --repeats --top 4',
+        text: 'sudo /opt/ecocart/bin/request-top --window 90s --group source,route --limit 4',
         action: () => runAction('inspect'),
       },
       inspected: {
-        text: 'auditctl verify --scope accounts,orders',
+        text: 'sudo /opt/ecocart/bin/integrity-check --scope accounts,orders --since 10m',
         action: () => runAction('classify'),
       },
       classified: {
-        text: 'ratectl limit --sources repeated --rate 40/10s',
+        text: 'sudo /opt/ecocart/bin/edge-policy apply sale-emergency --match repeating --atomic',
         action: () => runAction('limit'),
       },
       limited: {
-        text: 'edge-control apply sale-protection --mode filter',
+        text: 'sudo /opt/ecocart/bin/traffic-filter enable --profile sale-ddos --preserve sessions',
         action: () => runAction('scrub'),
       },
       filtered: {
-        text: 'healthctl probe --routes storefront,cart,checkout',
+        text: 'sudo /opt/ecocart/bin/smoke-test --host ecocart.whf.bz --routes storefront,cart,checkout --preserve-cart',
         action: () => runAction('verify'),
       },
     };

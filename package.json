@@ -1,6 +1,6 @@
 {
   "name": "ecommerce",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "EcoCart is a PHP, MySQL, XAMPP, HTML, JavaScript, and DaisyUI demo system for the DDoS awareness screenplay.",
   "main": "main.js",
   "scripts": {

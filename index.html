@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <meta name="description" content="SWARMGRID C2 botnet orchestration console.">
+    <meta name="description" content="SWARMGRID C2 cinematic traffic-control console.">
     <meta name="theme-color" content="#03070c">
     <title>SWARMGRID C2</title>
     <link href="public/output.css" rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/images/swarmgrid-c2-icon.png">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="attacker-body min-h-screen overflow-x-hidden text-slate-100" data-attacker-target="ecocart.local">
+<body class="attacker-body min-h-screen overflow-x-hidden text-slate-100" data-attacker-target="ecocart.whf.bz">
     <header class="border-b border-slate-800 bg-[#05090f]">
         <div class="flex min-h-12 items-center gap-3 px-4">
             <div class="flex gap-1.5" aria-hidden="true">
@@ -39,7 +39,7 @@
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>
                 <p class="font-mono text-[10px] uppercase text-slate-600">Command terminal</p>
-                <p class="mt-1 font-mono text-xs font-black text-slate-300">botnet orchestrator / awaiting orders</p>
+                <p class="mt-1 font-mono text-xs font-black text-slate-300">campaign relay / awaiting operator</p>
                 </div>
                 <span class="rounded bg-emerald-400/10 px-2 py-1 font-mono text-[9px] font-black text-emerald-400" data-attacker-status>STANDBY</span>
             </div>
@@ -47,7 +47,7 @@
             <div class="attacker-terminal flex-1" data-attacker-terminal aria-live="polite"></div>
 
             <form class="mt-3 flex items-center gap-2 rounded-lg border border-slate-800 bg-black px-3" data-attacker-command-form>
-                <span class="hidden font-mono text-xs text-rose-400 sm:inline">operator@control:~$</span>
+                <span class="hidden font-mono text-xs text-rose-400 sm:inline">swarm@relay:~$</span>
                 <input class="h-11 min-w-0 flex-1 bg-transparent font-mono text-xs text-slate-200 outline-none" data-attacker-command-input autocomplete="off" spellcheck="false" placeholder="ready" autofocus>
                 <span class="font-mono text-[9px] uppercase text-slate-700">Enter</span>
             </form>
@@ -57,7 +57,7 @@
             <div class="mb-4 border-l-2 border-rose-500 bg-rose-500/5 px-3 py-3">
                 <p class="font-mono text-[9px] uppercase text-slate-600">Selected target</p>
                 <p class="mt-2 break-all font-mono text-xs font-black text-rose-300">EcoCart Ecommerce</p>
-                <p class="mt-1 break-all font-mono text-[9px] text-slate-500" data-attacker-target-label>ecocart.local</p>
+                <p class="mt-1 break-all font-mono text-[9px] text-slate-500" data-attacker-target-label>ecocart.whf.bz</p>
                 <div class="mt-3 flex items-center gap-2">
                     <span class="h-2 w-2 rounded-full bg-slate-600" data-attacker-target-dot></span>
                     <span class="font-mono text-[9px] font-black uppercase text-slate-500" data-attacker-target-state>Not selected</span>
