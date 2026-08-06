@@ -64,20 +64,20 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 INSERT INTO products (name, category, description, price, stock, image_url, is_active) VALUES
-('School Supplies Set', 'Students', 'A complete study bundle with notebooks, pens, folders, and daily classroom essentials.', 349.00, 38, 'image/School%20supplies%20set.jpg', 1),
-('Sale Sneakers', 'Students', 'Lightweight everyday sneakers with cushioned support for school, errands, and weekends.', 899.00, 31, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80', 1),
-('Wireless Headset', 'Students', 'Comfortable wireless headset for classes, calls, and entertainment.', 1199.00, 28, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80', 1),
-('Work Safety Boots', 'Construction', 'Heavy-duty boots for the construction workers checking the sale during lunch break.', 1299.00, 16, 'https://images.unsplash.com/photo-1605812860427-4024433a70fd?auto=format&fit=crop&w=900&q=80', 1),
-('Work Safety Helmet', 'Construction', 'Durable protective helmet for job-site safety and field work.', 499.00, 22, 'image/Work%20Safety%20Helmet.jpg', 1),
-('Basic Tool Set', 'Construction', 'A compact everyday tool kit with the essentials for repairs, assembly, and site work.', 649.00, 19, 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=80', 1),
-('Motorcycle Phone Holder', 'Rider', 'A secure handlebar phone mount that keeps directions visible while riding.', 249.00, 44, 'image/phone%20holder.jpg', 1),
-('Motorcycle Rain Gear', 'Rider', 'Lightweight rain jacket and waterproof pouch for daily delivery rides.', 799.00, 17, 'image/motorcycle%20rain%20gear.jpg', 1),
-('Kalha Cooking Pot', 'Barangay', 'A sturdy stainless cooking pot for soups, stews, rice dishes, and family meals.', 399.00, 26, 'image/kalha%20cooking%20pot.jpg', 1),
-('Home Curtain Set', 'Barangay', 'A clean curtain set for homes, waiting-shed shoppers, and family spaces.', 299.00, 54, 'image/home%20curtain%20set.jpg', 1),
-('Baby Formula Pack', 'Family', 'A convenient formula multipack prepared for everyday feeding routines.', 699.00, 13, 'image/Baby%20Formula%20Pack.jpg', 1),
-('Diaper Bundle', 'Family', 'Soft, absorbent diapers bundled for dependable everyday comfort and care.', 599.00, 24, 'image/diaper_bundle.jpg', 1),
-('Baby Clothes Set', 'Family', 'Soft, breathable baby basics made for comfortable all-day wear.', 449.00, 20, 'image/Baby%20set%20clothes.jpg', 1),
-('Feeding Bottles', 'Family', 'Baby feeding bottles for the mother and family essential-needs cart.', 249.00, 30, 'image/feeding%20bottles.jpg', 1)
+('School Supplies Set', 'Students', 'A complete study bundle with notebooks, pens, folders, and daily classroom essentials.', 199.00, 38, 'image/School%20supplies%20set.jpg', 1),
+('Sale Sneakers', 'Students', 'Lightweight everyday sneakers with cushioned support for school, errands, and weekends.', 599.00, 31, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80', 1),
+('Wireless Headset', 'Students', 'Comfortable wireless headset for classes, calls, and entertainment.', 799.00, 28, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80', 1),
+('Work Safety Boots', 'Construction', 'Heavy-duty boots for the construction workers checking the sale during lunch break.', 899.00, 16, 'https://images.unsplash.com/photo-1605812860427-4024433a70fd?auto=format&fit=crop&w=900&q=80', 1),
+('Work Safety Helmet', 'Construction', 'Durable protective helmet for job-site safety and field work.', 299.00, 22, 'image/Work%20Safety%20Helmet.jpg', 1),
+('Basic Tool Set', 'Construction', 'A compact everyday tool kit with the essentials for repairs, assembly, and site work.', 399.00, 19, 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?auto=format&fit=crop&w=900&q=80', 1),
+('Motorcycle Phone Holder', 'Rider', 'A secure handlebar phone mount that keeps directions visible while riding.', 119.00, 44, 'image/phone%20holder.jpg', 1),
+('Motorcycle Rain Gear', 'Rider', 'Lightweight rain jacket and waterproof pouch for daily delivery rides.', 499.00, 17, 'image/motorcycle%20rain%20gear.jpg', 1),
+('Kalha Cooking Pot', 'Barangay', 'A sturdy stainless cooking pot for soups, stews, rice dishes, and family meals.', 249.00, 26, 'image/kalha%20cooking%20pot.jpg', 1),
+('Home Curtain Set', 'Barangay', 'A clean curtain set for homes, waiting-shed shoppers, and family spaces.', 199.00, 54, 'image/home%20curtain%20set.jpg', 1),
+('Baby Formula Pack', 'Family', 'A convenient formula multipack prepared for everyday feeding routines.', 549.00, 13, 'image/Baby%20Formula%20Pack.jpg', 1),
+('Diaper Bundle', 'Family', 'Soft, absorbent diapers bundled for dependable everyday comfort and care.', 399.00, 24, 'image/diaper_bundle.jpg', 1),
+('Baby Clothes Set', 'Family', 'Soft, breathable baby basics made for comfortable all-day wear.', 299.00, 20, 'image/Baby%20set%20clothes.jpg', 1),
+('Feeding Bottles', 'Family', 'Baby feeding bottles for the mother and family essential-needs cart.', 119.00, 30, 'image/feeding%20bottles.jpg', 1)
 ON DUPLICATE KEY UPDATE
   category = VALUES(category),
   description = VALUES(description),

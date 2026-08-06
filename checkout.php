@@ -18,6 +18,8 @@ $orderQueued = false;
 $subtotal = 0.0;
 $orderTotal = 0.0;
 $discount = 0.0;
+$retailSubtotal = 0.0;
+$saleSavings = 0.0;
 $shipping = 0.0;
 $promoCode = '';
 $promotion = null;
@@ -30,6 +32,15 @@ $headerProfile = $currentUser && (string) ($currentUser['role'] ?? '') === 'cust
     ? customer_profile($currentUser)
     : null;
 $headerAvatar = $headerProfile ? profile_avatar_url($headerProfile) : null;
+$catalog = product_lookup();
+$pricingCatalog = [];
+foreach ($catalog as $productId => $product) {
+    $pricingCatalog[(string) $productId] = [
+        'price' => (float) $product['price'],
+        'regular_price' => product_regular_price($product),
+    ];
+}
+$pricingCatalogJson = htmlspecialchars((string) json_encode($pricingCatalog), ENT_QUOTES);
 
 function offline_order_number(string $email): string
 {
@@ -91,7 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'That discount code is not valid. Check the spelling or remove it.';
     }
 
-    $catalog = product_lookup();
     $cart = [];
 
     foreach (is_array($submittedCart) ? $submittedCart : [] as $item) {
@@ -105,11 +115,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $price = (float) $product['price'];
+        $regularPrice = product_regular_price($product);
         $subtotal += $price * $quantity;
+        $retailSubtotal += $regularPrice * $quantity;
         $cart[] = [
             'id' => $productId,
             'name' => (string) $product['name'],
             'price' => $price,
+            'regular_price' => $regularPrice,
             'quantity' => $quantity,
             'category' => (string) $product['category'],
             'image_url' => (string) $product['image_url'],
@@ -121,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $discount = promotion_discount($subtotal, $promotion);
+    $saleSavings = max(0.0, $retailSubtotal - $subtotal);
     $shipping = $subtotal >= 1500 ? 0.0 : 49.0;
     $orderTotal = max(0.0, $subtotal - $discount + $shipping);
 
@@ -171,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="icon" href="data:,">
 </head>
-<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-view="checkout" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>" data-promo-code="<?= htmlspecialchars((string) $publicPromotion['code']) ?>" data-promo-rate="<?= htmlspecialchars((string) $publicPromotion['rate']) ?>">
+<body class="flex min-h-screen flex-col bg-[#f4f5f7] text-slate-950" data-scene-client data-scene-view="checkout" data-scene-cue="<?= htmlspecialchars((string) $sceneState['cue']) ?>" data-scene-revision="<?= (int) $sceneState['revision'] ?>" data-scene-updated="<?= htmlspecialchars((string) $sceneState['updated_at']) ?>" data-promo-code="<?= htmlspecialchars((string) $publicPromotion['code']) ?>" data-promo-rate="<?= htmlspecialchars((string) $publicPromotion['rate']) ?>" data-sale-catalog="<?= $pricingCatalogJson ?>">
     <div class="fixed inset-0 z-[100] hidden bg-white" data-scene-loading>
         <div class="flex min-h-screen flex-col">
             <header class="border-b border-slate-200">
@@ -287,7 +301,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <h2 class="text-sm font-black uppercase text-slate-500">Order summary</h2>
                             <dl class="mt-4 space-y-2.5 text-sm">
                                 <div class="flex justify-between"><dt class="text-slate-500">Order number</dt><dd class="font-bold">#<?= $orderId ?></dd></div>
-                                <div class="flex justify-between"><dt class="text-slate-500">Subtotal</dt><dd class="font-bold"><?= peso($subtotal) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Regular subtotal</dt><dd class="font-bold text-slate-400 line-through"><?= peso($retailSubtotal) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Big Blowout savings</dt><dd class="font-bold text-emerald-700">-<?= peso($saleSavings) ?></dd></div>
+                                <div class="flex justify-between"><dt class="text-slate-500">Sale subtotal</dt><dd class="font-bold"><?= peso($subtotal) ?></dd></div>
                                 <div class="flex justify-between"><dt class="text-slate-500"><?= $promotion ? htmlspecialchars((string) $promotion['label']) : 'Discount' ?></dt><dd class="font-bold text-emerald-700">-<?= peso($discount) ?></dd></div>
                                 <div class="flex justify-between"><dt class="text-slate-500">Delivery</dt><dd class="font-bold"><?= $shipping > 0 ? peso($shipping) : 'FREE' ?></dd></div>
                                 <div class="my-3 h-px bg-slate-200"></div>
@@ -455,7 +471,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="bg-slate-50 p-5 sm:p-6">
                         <div class="space-y-3 text-sm">
-                            <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><span class="font-bold" data-order-subtotal>PHP 0.00</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Regular subtotal</span><span class="font-bold text-slate-400 line-through" data-order-retail-subtotal>PHP 0.00</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Big Blowout savings</span><span class="font-bold text-emerald-700" data-order-sale-savings>-PHP 0.00</span></div>
+                            <div class="flex justify-between"><span class="text-slate-500">Sale subtotal</span><span class="font-bold" data-order-subtotal>PHP 0.00</span></div>
                             <div class="flex justify-between"><span class="text-slate-500" data-order-discount-label>Discount</span><span class="font-bold text-emerald-700" data-order-discount>-PHP 0.00</span></div>
                             <div class="flex justify-between"><span class="text-slate-500">Delivery</span><span class="font-bold" data-order-shipping>PHP 0.00</span></div>
                         </div>

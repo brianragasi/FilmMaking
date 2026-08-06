@@ -1,6 +1,7 @@
 ﻿const money = new Intl.NumberFormat('en-PH', {
   style: 'currency',
   currency: 'PHP',
+  currencyDisplay: 'code',
 });
 
 const PROMO_STORAGE_KEY = 'ecocart_promo_code';
@@ -133,7 +134,17 @@ function applySystemState() {
 
 function getCart() {
   try {
-    return JSON.parse(localStorage.getItem('ecocart_cart') || '[]');
+    const cart = JSON.parse(localStorage.getItem('ecocart_cart') || '[]');
+    let saleCatalog = {};
+    try {
+      saleCatalog = JSON.parse(document.body?.dataset.saleCatalog || '{}');
+    } catch {
+      saleCatalog = {};
+    }
+
+    return Array.isArray(cart)
+      ? cart.map((item) => saleCatalog[String(item.id)] ? { ...item, ...saleCatalog[String(item.id)] } : item)
+      : [];
   } catch {
     return [];
   }
@@ -179,12 +190,14 @@ function cartTotals() {
   const cart = getCart();
   const count = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
+  const retailSubtotal = cart.reduce((sum, item) => sum + Number(item.regular_price || item.price) * item.quantity, 0);
+  const saleSavings = Math.max(0, retailSubtotal - subtotal);
 
-  return { cart, count, subtotal };
+  return { cart, count, subtotal, retailSubtotal, saleSavings };
 }
 
 function refreshCartUi() {
-  const { cart, count, subtotal } = cartTotals();
+  const { cart, count, subtotal, retailSubtotal, saleSavings } = cartTotals();
   const promo = configuredPromo();
   const promoCode = activePromoCode();
   const discount = subtotal > 0 && promoCode ? subtotal * promo.rate : 0;
@@ -201,6 +214,14 @@ function refreshCartUi() {
 
   document.querySelectorAll('[data-order-subtotal]').forEach((node) => {
     node.textContent = money.format(subtotal);
+  });
+
+  document.querySelectorAll('[data-order-retail-subtotal]').forEach((node) => {
+    node.textContent = money.format(retailSubtotal);
+  });
+
+  document.querySelectorAll('[data-order-sale-savings]').forEach((node) => {
+    node.textContent = `-${money.format(saleSavings)}`;
   });
 
   document.querySelectorAll('[data-order-discount]').forEach((node) => {
@@ -259,7 +280,7 @@ function refreshCartUi() {
         <div class="min-w-0">
           <p class="text-[10px] font-black uppercase text-slate-400">${escapeHtml(item.category || 'EcoCart pick')}</p>
           <p class="mt-1 font-black text-slate-900">${escapeHtml(item.name)}</p>
-          <p class="mt-1 text-xs text-slate-500">${money.format(Number(item.price))} each</p>
+          <div class="mt-1 flex flex-wrap items-baseline gap-2"><p class="text-xs font-bold text-rose-600">${money.format(Number(item.price))} each</p><p class="text-[10px] text-slate-400 line-through">${money.format(Number(item.regular_price || item.price))}</p></div>
           <p class="mt-2 text-base font-black text-rose-600">${money.format(Number(item.price) * item.quantity)}</p>
         </div>
       </div>
@@ -515,6 +536,11 @@ function bootStorefront() {
         quickModal.querySelector('[data-quick-category]').textContent = product.category;
         quickModal.querySelector('[data-quick-name]').textContent = product.name;
         quickModal.querySelector('[data-quick-price]').textContent = money.format(Number(product.price));
+        const regularPrice = Number(product.regular_price || product.price);
+        const savings = Math.max(0, regularPrice - Number(product.price));
+        const discountPercentage = regularPrice > 0 ? Math.round((savings / regularPrice) * 100) : 0;
+        quickModal.querySelector('[data-quick-regular-price]').textContent = money.format(regularPrice);
+        quickModal.querySelector('[data-quick-savings]').textContent = `Save ${money.format(savings)} (${discountPercentage}% off)`;
         const quickAdd = quickModal.querySelector('[data-quick-add]');
         quickAdd.dataset.addProduct = JSON.stringify(product);
         quickModal.showModal();

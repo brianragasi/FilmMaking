@@ -208,7 +208,7 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                         <div class="relative flex h-full min-h-[232px] flex-col items-start justify-end p-6">
                             <span class="badge border-0 bg-amber-400 font-black text-slate-950">WORKSITE WEEK</span>
                             <h2 class="mt-3 text-2xl font-black">Built for the job.</h2>
-                            <p class="mt-1 text-sm text-slate-200">Safety boots, helmets, and tool sets from PHP 499.</p>
+                            <p class="mt-1 text-sm text-slate-200">Safety boots, helmets, and tool sets from PHP 299.</p>
                             <span class="mt-4 flex items-center gap-2 text-xs font-black uppercase">Shop work gear <i data-lucide="arrow-up-right" class="h-4 w-4"></i></span>
                         </div>
                     </a>
@@ -285,16 +285,17 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                     <article class="grid overflow-hidden rounded-lg border border-slate-200 bg-[#fff7ed] sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                         <figure class="relative min-h-72 overflow-hidden bg-white">
                             <img class="absolute inset-0 h-full w-full object-cover" src="<?= htmlspecialchars((string) $dealProduct['image_url']) ?>" alt="<?= htmlspecialchars((string) $dealProduct['name']) ?>">
-                            <span class="absolute left-4 top-4 bg-rose-600 px-3 py-2 text-[10px] font-black uppercase text-white">Deal of the day</span>
+                            <div class="absolute left-4 top-4 flex items-center gap-2"><span class="bg-rose-600 px-3 py-2 text-[10px] font-black uppercase text-white">Deal of the day</span><span class="bg-slate-950 px-3 py-2 text-[10px] font-black uppercase text-white"><?= product_discount_percentage($dealProduct) ?>% off</span></div>
                         </figure>
                         <div class="flex flex-col justify-center p-6">
                             <p class="text-xs font-black uppercase text-amber-700"><?= htmlspecialchars((string) $dealProduct['category']) ?></p>
                             <h3 class="mt-2 text-2xl font-black"><?= htmlspecialchars((string) $dealProduct['name']) ?></h3>
                             <p class="mt-2 text-sm leading-6 text-slate-600"><?= htmlspecialchars((string) $dealProduct['description']) ?></p>
-                            <div class="mt-4 flex items-end gap-3">
+                            <div class="mt-4 flex flex-wrap items-end gap-3">
                                 <span class="text-2xl font-black text-rose-600"><?= peso((float) $dealProduct['price']) ?></span>
-                                <span class="pb-1 text-xs text-slate-400 line-through"><?= peso((float) $dealProduct['price'] * 1.4) ?></span>
+                                <span class="pb-1 text-xs text-slate-400 line-through"><?= peso(product_regular_price($dealProduct)) ?></span>
                             </div>
+                            <p class="mt-1 text-xs font-black text-emerald-700">You save <?= peso(product_savings($dealProduct)) ?></p>
                             <div class="mt-5 h-1.5 overflow-hidden bg-white"><div class="h-full w-3/4 bg-rose-600"></div></div>
                             <p class="mt-2 text-[11px] font-bold text-slate-500">Only <?= (int) $dealProduct['stock'] ?> left at this price</p>
                         </div>
@@ -311,7 +312,7 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                                 <div class="mt-1 flex text-amber-400" aria-label="5 out of 5 stars">
                                     <?php for ($star = 0; $star < 5; $star++): ?><i data-lucide="star" class="h-3 w-3 fill-current"></i><?php endfor; ?>
                                 </div>
-                                <p class="mt-1 text-sm font-black text-rose-600"><?= peso((float) $product['price']) ?></p>
+                                <div class="mt-1 flex flex-wrap items-baseline gap-1.5"><p class="text-sm font-black text-rose-600"><?= peso((float) $product['price']) ?></p><p class="text-[10px] font-bold text-slate-400 line-through"><?= peso(product_regular_price($product)) ?></p></div>
                             </div>
                         </article>
                     <?php endforeach; ?>
@@ -325,7 +326,7 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                     <div>
                         <p class="text-xs font-black uppercase text-rose-600">Big Blowout catalog</p>
                         <h2 class="mt-1 text-3xl font-black">Today&apos;s sale picks</h2>
-                        <p class="mt-2 text-sm text-slate-500"><span data-product-result-count><?= $productCount ?></span> products ready to shop.</p>
+                        <p class="mt-2 text-sm text-slate-500"><span data-product-result-count><?= $productCount ?></span> products with real markdowns from 39% to 70% off.</p>
                     </div>
                     <div class="flex max-w-full gap-1 overflow-x-auto rounded-lg bg-slate-100 p-1" role="group" aria-label="Filter products">
                         <button class="product-filter-active btn btn-sm shrink-0 border-0" type="button" data-product-filter="all">All</button>
@@ -351,6 +352,7 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                             'id' => (int) $product['id'],
                             'name' => (string) $product['name'],
                             'price' => (float) $product['price'],
+                            'regular_price' => product_regular_price($product),
                             'category' => (string) $product['category'],
                             'image_url' => (string) $product['image_url'],
                         ];
@@ -361,7 +363,7 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                         <article class="product-card group relative flex min-w-0 flex-col bg-white p-4" data-product-card data-product-name="<?= htmlspecialchars(strtolower((string) $product['name'])) ?>" data-product-category="<?= htmlspecialchars($category) ?>">
                             <figure class="relative aspect-[5/4] overflow-hidden bg-slate-100">
                                 <img class="h-full w-full object-cover transition duration-300 group-hover:scale-105" src="<?= htmlspecialchars((string) $product['image_url']) ?>" alt="<?= htmlspecialchars((string) $product['name']) ?>" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=900&q=80';">
-                                <span class="absolute left-3 top-3 bg-rose-600 px-2 py-1 text-[10px] font-black uppercase text-white"><?= $index % 3 === 0 ? 'Best seller' : 'Sale' ?></span>
+                                <span class="absolute left-3 top-3 bg-rose-600 px-2 py-1 text-[10px] font-black uppercase text-white"><?= product_discount_percentage($product) ?>% off</span>
                                 <div class="absolute right-3 top-3 flex flex-col gap-2">
                                     <button class="grid h-9 w-9 place-items-center rounded-lg bg-white text-slate-700 shadow transition hover:bg-rose-600 hover:text-white" type="button" aria-label="Add <?= htmlspecialchars((string) $product['name']) ?> to wishlist" data-wishlist-product="<?= (int) $product['id'] ?>">
                                         <i data-lucide="heart" class="h-4 w-4"></i>
@@ -378,10 +380,11 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                                 </div>
                                 <h3 class="mt-2 min-h-12 text-base font-black leading-6"><?= htmlspecialchars((string) $product['name']) ?></h3>
                                 <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500"><?= htmlspecialchars((string) $product['description']) ?></p>
-                                <div class="mt-4 flex items-end gap-2">
+                                <div class="mt-4 flex flex-wrap items-end gap-x-2 gap-y-0.5">
                                     <p class="text-xl font-black text-rose-600"><?= peso((float) $product['price']) ?></p>
-                                    <p class="pb-0.5 text-[11px] font-semibold text-slate-400 line-through"><?= peso((float) $product['price'] * 1.4) ?></p>
+                                    <p class="pb-0.5 text-[11px] font-semibold text-slate-400 line-through"><?= peso(product_regular_price($product)) ?></p>
                                 </div>
+                                <p class="mt-1 text-[10px] font-black uppercase text-emerald-700">Save <?= peso(product_savings($product)) ?></p>
                                 <div class="mt-4 flex items-center gap-2">
                                     <button class="btn min-w-0 flex-1 border-0 bg-slate-950 text-white hover:bg-rose-600" type="button" data-add-product="<?= $productJson ?>">
                                         <i data-lucide="shopping-bag" class="h-4 w-4"></i><span>Add to cart</span>
@@ -472,7 +475,8 @@ $publicPromotion = ecocart_promotions()['BIGBLOWOUT'];
                         <?php for ($star = 0; $star < 5; $star++): ?><i data-lucide="star" class="h-4 w-4 fill-current"></i><?php endfor; ?>
                         <span class="text-xs font-bold text-slate-500">Verified shopper favorite</span>
                     </div>
-                    <p class="mt-5 text-2xl font-black text-rose-600" data-quick-price></p>
+                    <div class="mt-5 flex flex-wrap items-end gap-2"><p class="text-2xl font-black text-rose-600" data-quick-price></p><p class="pb-0.5 text-xs font-semibold text-slate-400 line-through" data-quick-regular-price></p></div>
+                    <p class="mt-1 text-xs font-black text-emerald-700" data-quick-savings></p>
                     <button class="btn mt-6 border-0 bg-slate-950 text-white hover:bg-rose-600" type="button" data-quick-add>
                         <i data-lucide="shopping-bag" class="h-4 w-4"></i><span>Add to cart</span>
                     </button>
